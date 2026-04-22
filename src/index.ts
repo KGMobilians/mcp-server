@@ -12,7 +12,7 @@ import { registerGetNezoCodeExampleTool } from "./tool/get-nezo-code-example.js"
 
 const server = new McpServer({
   name: "mobilpay",
-  version: "2.0.1",
+  version: "2.0.2",
 });
 
 await buildIndex();
