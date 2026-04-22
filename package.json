@@ -1,6 +1,6 @@
 {
   "name": "@mobilpay/mcp-server",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "KG파이낸셜 결제서비스(MOBILPAY + 내죠여왕) 연동을 위한 MCP 서버",
   "type": "module",
   "bin": {
