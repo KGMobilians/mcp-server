@@ -24,6 +24,10 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": ["mobilpay", "nezo", "mcp", "payment", "kg파이낸셜", "내죠여왕", "알림톡결제"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KGMobilians/mcp-server"
+  },
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
