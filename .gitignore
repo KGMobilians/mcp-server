@@ -2,4 +2,13 @@ node_modules/
 dist/
 .DS_Store
 *.tgz
-.claude/settings.local.json
+
+# local/internal files
+.claude/
+auto_test/
+developer-site/
+developer-site-new/
+분석자료/
+참고자료/
+CLAUDE.md
+결제연동MCP_보안조치계획_260422.md
