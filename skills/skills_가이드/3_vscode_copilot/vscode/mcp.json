@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "mobilpay": {
+      "command": "npx",
+      "args": ["-y", "@mobilpay/mcp-server@latest"]
+    }
+  }
+}

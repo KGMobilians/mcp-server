@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>테스트 결과 분석 — MOBILPAY</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Pretendard', -apple-system, sans-serif; background: #f5f5f5; color: #333; }
+.header { background: #1a1a2e; color: #fff; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header a { color: #8ecae6; text-decoration: none; font-size: 14px; }
+.container { max-width: 1400px; margin: 24px auto; padding: 0 24px; }
+
+/* 필터 */
+.filter-bar { background: #fff; border-radius: 8px; padding: 16px 24px; margin-bottom: 20px; display: flex; gap: 16px; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.08); flex-wrap: wrap; }
+.filter-bar label { font-size: 13px; font-weight: 600; color: #666; }
+.filter-bar select { padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
+.filter-bar .count { margin-left: auto; font-size: 13px; color: #888; }
+
+/* 결과 테이블 */
+.results-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.results-table th { background: #f8f9fa; padding: 12px 16px; font-size: 12px; font-weight: 600; color: #666; text-align: left; border-bottom: 1px solid #eee; }
+.results-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+.results-table tr:hover { background: #fafbfc; }
+.results-table tr.expanded { background: #f8f9fa; }
+
+/* 뱃지 */
+.badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-success { background: #e8f5e9; color: #2e7d32; }
+.badge-fail { background: #ffebee; color: #c62828; }
+.badge-pending { background: #fff8e1; color: #f57f17; }
+
+/* 상세 패널 */
+.detail-panel { display: none; background: #f8f9fa; }
+.detail-panel.open { display: table-row; }
+.detail-content { padding: 20px 24px; }
+.detail-section { margin-bottom: 20px; }
+.detail-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #1a1a2e; border-bottom: 1px solid #e0e0e0; padding-bottom: 6px; }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.detail-item { font-size: 12px; }
+.detail-item .key { color: #888; margin-bottom: 2px; }
+.detail-item .val { font-weight: 500; word-break: break-all; }
+.detail-item .val.ok { color: #2e7d32; }
+.detail-item .val.ng { color: #c62828; }
+
+/* JSON 표시 */
+.json-block { background: #1a1a2e; color: #8ecae6; padding: 12px 16px; border-radius: 6px; font-size: 11px; font-family: 'Fira Code', monospace; overflow-x: auto; white-space: pre-wrap; max-height: 300px; overflow-y: auto; margin-top: 8px; }
+
+/* 분석 카드 */
+.analysis-card { background: #fff; border-left: 4px solid; padding: 16px 20px; border-radius: 0 8px 8px 0; margin-top: 12px; }
+.analysis-card.ok { border-color: #2ecc71; }
+.analysis-card.ng { border-color: #e74c3c; }
+.analysis-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.analysis-items { font-size: 13px; line-height: 1.8; }
+.check-ok::before { content: '✓ '; color: #2ecc71; font-weight: 700; }
+.check-ng::before { content: '✗ '; color: #e74c3c; font-weight: 700; }
+.check-na::before { content: '— '; color: #999; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>테스트 결과 분석</h1>
+  <a href="/">← 테스트 대시보드</a>
+</div>
+
+<div class="container">
+  <div class="filter-bar">
+    <label>테스트 케이스:</label>
+    <select id="filterCase">
+      <option value="">전체</option>
+    </select>
+    <label>결과:</label>
+    <select id="filterVerdict">
+      <option value="">전체</option>
+      <option value="success">성공</option>
+      <option value="fail">실패</option>
+      <option value="pending">대기중</option>
+    </select>
+    <button class="btn-refresh" onclick="loadResults()" style="padding:6px 14px;border:1px solid #ddd;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">새로고침</button>
+    <span class="count" id="resultCount"></span>
+  </div>
+
+  <table class="results-table">
+    <thead>
+      <tr>
+        <th style="width:40px"></th>
+        <th>실행ID</th>
+        <th>테스트 케이스</th>
+        <th>실행 시각</th>
+        <th>결과</th>
+        <th>판정 사유</th>
+        <th>ok_url</th>
+        <th>noti_url</th>
+      </tr>
+    </thead>
+    <tbody id="resultBody"></tbody>
+  </table>
+</div>
+
+<script>
+let allResults = [];
+let cases = [];
+
+async function init() {
+  cases = await fetch('/api/cases').then(r => r.json());
+  const select = document.getElementById('filterCase');
+  const seen = new Set();
+  cases.forEach(c => {
+    if (!seen.has(c.cashCode)) {
+      const optGroup = document.createElement('optgroup');
+      optGroup.label = c.cashCodeName;
+      cases.filter(x => x.cashCode === c.cashCode).forEach(x => {
+        const opt = document.createElement('option');
+        opt.value = x.id;
+        opt.textContent = `${x.id} — ${x.name}`;
+        optGroup.appendChild(opt);
+      });
+      select.appendChild(optGroup);
+      seen.add(c.cashCode);
+    }
+  });
+
+  // URL 파라미터로 케이스 필터
+  const urlCase = new URLSearchParams(location.search).get('case');
+  if (urlCase) select.value = urlCase;
+
+  document.getElementById('filterCase').addEventListener('change', renderResults);
+  document.getElementById('filterVerdict').addEventListener('change', renderResults);
+
+  await loadResults();
+}
+
+async function loadResults() {
+  allResults = await fetch('/api/results').then(r => r.json());
+  renderResults();
+}
+
+function renderResults() {
+  const caseFilter = document.getElementById('filterCase').value;
+  const verdictFilter = document.getElementById('filterVerdict').value;
+
+  let filtered = allResults;
+  if (caseFilter) filtered = filtered.filter(r => r.caseId === caseFilter);
+  if (verdictFilter) filtered = filtered.filter(r => r.verdict === verdictFilter);
+
+  document.getElementById('resultCount').textContent = `${filtered.length}건`;
+
+  const tbody = document.getElementById('resultBody');
+  tbody.innerHTML = filtered.map((r, i) => `
+    <tr onclick="toggleDetail(${i})" style="cursor:pointer">
+      <td style="text-align:center;font-size:12px;color:#999">▶</td>
+      <td><code>${r.runId}</code></td>
+      <td><strong>${r.caseId}</strong> ${r.caseName}</td>
+      <td>${r.timestamp}</td>
+      <td><span class="badge badge-${r.verdict}">${verdictLabel(r.verdict)}</span></td>
+      <td style="max-width:250px">${r.verdictReason}</td>
+      <td>${r.okUrl ? '<span class="badge badge-' + (r.okUrl.code === '0000' ? 'success' : 'fail') + '">' + r.okUrl.code + '</span>' : '<span style="color:#ccc">—</span>'}</td>
+      <td>${r.notiUrl ? '<span class="badge badge-' + (r.notiUrl.code === '0000' ? 'success' : 'fail') + '">' + r.notiUrl.code + '</span>' : '<span style="color:#ccc">—</span>'}</td>
+    </tr>
+    <tr class="detail-panel" id="detail-${i}">
+      <td colspan="8">
+        <div class="detail-content">${buildDetailHtml(r)}</div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function verdictLabel(v) {
+  return { success: '성공', fail: '실패', pending: '대기중' }[v] || v;
+}
+
+function toggleDetail(i) {
+  const el = document.getElementById('detail-' + i);
+  el.classList.toggle('open');
+}
+
+function buildDetailHtml(r) {
+  let html = '';
+
+  // 종합 분석
+  html += buildAnalysis(r);
+
+  // 거래등록
+  html += `<div class="detail-section"><h3>1. 거래등록</h3>`;
+  html += `<div class="detail-grid">`;
+  html += detailItem('TID', r.registration.tid || '—');
+  html += detailItem('Trade ID', r.registration.tradeId);
+  html += detailItem('결과', r.registration.success ? '성공' : '실패 — ' + (r.registration.error || ''), r.registration.success);
+  html += detailItem('HMAC', r.registration.hmac || '—');
+  html += `</div>`;
+  html += `<details><summary style="font-size:12px;color:#888;cursor:pointer;margin-top:8px">요청/응답 JSON</summary>`;
+  html += `<div class="json-block">${JSON.stringify(r.registration.reqBody, null, 2)}</div>`;
+  html += `<div class="json-block">${JSON.stringify(r.registration.resBody, null, 2)}</div>`;
+  html += `</details></div>`;
+
+  // ok_url
+  if (r.okUrl) {
+    html += `<div class="detail-section"><h3>2. ok_url 수신</h3>`;
+    html += `<div class="detail-grid">`;
+    html += detailItem('수신시각', r.okUrl.receivedAt);
+    html += detailItem('code', r.okUrl.code, r.okUrl.code === '0000');
+    html += detailItem('HMAC 검증', r.okUrl.hmacValid === null ? '검증 불가' : (r.okUrl.hmacValid ? '유효' : '무효'), r.okUrl.hmacValid);
+    html += detailItem('tid', r.okUrl.params?.tid || '—');
+    html += detailItem('amount', r.okUrl.params?.amount || '—');
+    html += detailItem('pay_token', r.okUrl.params?.pay_token || '—');
+    if (r.okUrl.params?.sign_date) html += detailItem('sign_date (승인시각)', r.okUrl.params.sign_date);
+    if (r.okUrl.params?.phone_no) html += detailItem('phone_no', r.okUrl.params.phone_no);
+    html += `</div>`;
+    html += `<details><summary style="font-size:12px;color:#888;cursor:pointer;margin-top:8px">전체 파라미터</summary>`;
+    html += `<div class="json-block">${JSON.stringify(r.okUrl.params, null, 2)}</div>`;
+    html += `</details></div>`;
+  }
+
+  // noti_url
+  if (r.notiUrl) {
+    html += `<div class="detail-section"><h3>3. noti_url 수신</h3>`;
+    html += `<div class="detail-grid">`;
+    html += detailItem('수신시각', r.notiUrl.receivedAt);
+    html += detailItem('code', r.notiUrl.code, r.notiUrl.code === '0000');
+    html += detailItem('HMAC 검증', r.notiUrl.hmacValid === null ? '검증 불가' : (r.notiUrl.hmacValid ? '유효' : '무효'), r.notiUrl.hmacValid);
+    html += `</div>`;
+    html += `<details><summary style="font-size:12px;color:#888;cursor:pointer;margin-top:8px">전체 파라미터</summary>`;
+    html += `<div class="json-block">${JSON.stringify(r.notiUrl.params, null, 2)}</div>`;
+    html += `</details></div>`;
+  }
+
+  // 하이브리드 승인
+  if (r.approval) {
+    html += `<div class="detail-section"><h3>4. 하이브리드 승인</h3>`;
+    html += `<div class="detail-grid">`;
+    html += detailItem('요청시각', r.approval.requestedAt);
+    html += detailItem('결과', r.approval.success ? '승인 성공' : '승인 실패 — ' + (r.approval.error || ''), r.approval.success);
+    html += `</div>`;
+    html += `<details><summary style="font-size:12px;color:#888;cursor:pointer;margin-top:8px">요청/응답 JSON</summary>`;
+    html += `<div class="json-block">${JSON.stringify(r.approval.reqBody, null, 2)}</div>`;
+    html += `<div class="json-block">${JSON.stringify(r.approval.resBody, null, 2)}</div>`;
+    html += `</details></div>`;
+  }
+
+  return html;
+}
+
+function buildAnalysis(r) {
+  const checks = [];
+  const tc = cases.find(c => c.id === r.caseId);
+
+  // 1. 거래등록
+  checks.push({
+    label: '거래등록 성공',
+    ok: r.registration.success,
+    detail: r.registration.success ? `TID: ${r.registration.tid}` : r.registration.error,
+  });
+
+  // 2. ok_url 수신
+  if (r.okUrl) {
+    checks.push({
+      label: 'ok_url 수신 (code=0000)',
+      ok: r.okUrl.code === '0000',
+      detail: r.okUrl.code === '0000' ? `수신 시각: ${r.okUrl.receivedAt}` : `에러: ${r.okUrl.code} ${r.okUrl.params?.message || ''}`,
+    });
+
+    checks.push({
+      label: 'HMAC 무결성 검증',
+      ok: r.okUrl.hmacValid,
+      detail: r.okUrl.hmacValid === null ? '검증 데이터 부족' : (r.okUrl.hmacValid ? '유효' : '무효 — skey 확인 필요'),
+    });
+
+    // 금액 일치
+    if (tc && r.okUrl.params?.amount) {
+      const match = Number(r.okUrl.params.amount) === tc.amount;
+      checks.push({
+        label: `결제금액 일치 (요청: ${tc.amount}원)`,
+        ok: match,
+        detail: `응답 금액: ${r.okUrl.params.amount}원`,
+      });
+    }
+  } else if (r.registration.success) {
+    checks.push({ label: 'ok_url 수신', ok: null, detail: '아직 수신되지 않음' });
+  }
+
+  // 3. noti_url
+  if (tc?.useNotiUrl) {
+    if (r.notiUrl) {
+      checks.push({
+        label: 'noti_url 수신',
+        ok: r.notiUrl.code === '0000',
+        detail: r.notiUrl.code === '0000' ? `수신 시각: ${r.notiUrl.receivedAt}` : `에러: ${r.notiUrl.code}`,
+      });
+    } else {
+      checks.push({ label: 'noti_url 수신', ok: null, detail: '아직 수신되지 않음 (최대 20회 재시도 대기)' });
+    }
+  }
+
+  // 4. 하이브리드 승인
+  if (tc?.hybridPay === 'Y') {
+    if (r.approval) {
+      checks.push({
+        label: '하이브리드 승인 API',
+        ok: r.approval.success,
+        detail: r.approval.success ? '승인 완료' : r.approval.error || '실패',
+      });
+    } else if (r.okUrl?.code === '0000') {
+      checks.push({ label: '하이브리드 승인 API', ok: null, detail: '승인 요청 대기 중' });
+    }
+  }
+
+  const isOk = r.verdict === 'success';
+  let html = `<div class="analysis-card ${isOk ? 'ok' : 'ng'}">`;
+  html += `<div class="analysis-title">${isOk ? '✓ 테스트 통과' : '✗ 테스트 실패'} — ${r.verdictReason}</div>`;
+  html += `<div class="analysis-items">`;
+  checks.forEach(c => {
+    const cls = c.ok === true ? 'check-ok' : (c.ok === false ? 'check-ng' : 'check-na');
+    html += `<div class="${cls}">${c.label}: ${c.detail}</div>`;
+  });
+  html += `</div></div>`;
+  return html;
+}
+
+function detailItem(key, val, ok) {
+  const cls = ok === true ? 'ok' : (ok === false ? 'ng' : '');
+  return `<div class="detail-item"><div class="key">${key}</div><div class="val ${cls}">${val}</div></div>`;
+}
+
+init();
+</script>
+</body>
+</html>

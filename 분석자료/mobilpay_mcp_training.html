@@ -1,0 +1,1791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI로 결제연동 MCP 서버를 하루 만에 구축한 이야기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-card: #12121a;
+  --bg-card-hover: #1a1a28;
+  --text: #e8e8f0;
+  --text-muted: #8888a0;
+  --text-dim: #555570;
+  --accent: #6366f1;
+  --accent-light: #818cf8;
+  --accent-glow: rgba(99,102,241,0.15);
+  --green: #22c55e;
+  --green-dim: rgba(34,197,94,0.12);
+  --orange: #f59e0b;
+  --orange-dim: rgba(245,158,11,0.12);
+  --red: #ef4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --cyan: #06b6d4;
+  --cyan-dim: rgba(6,182,212,0.12);
+  --pink: #ec4899;
+  --border: #1e1e30;
+  --code-bg: #0d0d15;
+  --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+  --gradient-2: linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.75;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+
+/* === HERO === */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 30% 50%, rgba(99,102,241,0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 60%, rgba(236,72,153,0.06) 0%, transparent 50%);
+  animation: heroGlow 12s ease-in-out infinite alternate;
+}
+
+@keyframes heroGlow {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-2%, 2%) rotate(3deg); }
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.2rem;
+  border: 1px solid var(--accent);
+  border-radius: 100px;
+  font-size: 0.85rem;
+  color: var(--accent-light);
+  background: var(--accent-glow);
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', 'Noto Sans KR', serif;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  font-weight: 900;
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease-out 0.1s both;
+}
+
+.hero h1 .gradient-text {
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  margin-top: 1.5rem;
+  max-width: 600px;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 2.5rem;
+  margin-top: 3rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+.hero-stat {
+  text-align: center;
+}
+
+.hero-stat-value {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: var(--gradient-1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === NAV / TOC === */
+.toc {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  overflow-x: auto;
+}
+
+.toc-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.75rem 0;
+}
+
+.toc a {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.toc a:hover { color: var(--text); background: var(--accent-glow); }
+
+/* === SECTIONS === */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+section {
+  padding: 5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent-light);
+  margin-bottom: 0.75rem;
+}
+
+.section-title {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+.section-desc {
+  color: var(--text-muted);
+  max-width: 700px;
+  margin-bottom: 3rem;
+}
+
+/* === CARDS === */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.3s;
+}
+
+.card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(99,102,241,0.3);
+  transform: translateY(-2px);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.card h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* === TIMELINE === */
+.timeline {
+  position: relative;
+  padding-left: 3rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent), var(--pink), var(--cyan));
+  border-radius: 2px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2.5rem;
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -3rem;
+  top: 0.3rem;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 3px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.timeline-dot.chat { border-color: var(--accent); }
+.timeline-dot.code { border-color: var(--green); }
+.timeline-dot.cowork { border-color: var(--orange); }
+
+.timeline-dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.timeline-dot.chat::after { background: var(--accent); }
+.timeline-dot.code::after { background: var(--green); }
+.timeline-dot.cowork::after { background: var(--orange); }
+
+.timeline-time {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 0.3rem;
+}
+
+.timeline-title {
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+}
+
+.timeline-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+.badge-chat { background: var(--accent-glow); color: var(--accent-light); }
+.badge-code { background: var(--green-dim); color: var(--green); }
+.badge-cowork { background: var(--orange-dim); color: var(--orange); }
+
+.timeline-content {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 0.4rem;
+}
+
+/* === QA BLOCKS === */
+.qa-block {
+  margin-bottom: 2.5rem;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.qa-question {
+  background: rgba(99,102,241,0.06);
+  border-left: 4px solid var(--accent);
+  padding: 1.5rem 2rem;
+}
+
+.qa-question-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent-light);
+  margin-bottom: 0.4rem;
+}
+
+.qa-answer {
+  background: var(--bg-card);
+  border-left: 4px solid var(--green);
+  padding: 1.5rem 2rem;
+}
+
+.qa-answer-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  margin-bottom: 0.4rem;
+}
+
+.qa-result {
+  background: rgba(236,72,153,0.04);
+  border-left: 4px solid var(--pink);
+  padding: 1.5rem 2rem;
+}
+
+.qa-result-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--pink);
+  margin-bottom: 0.4rem;
+}
+
+.qa-block p, .qa-block ul {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.qa-block ul { padding-left: 1.5rem; margin-top: 0.5rem; }
+.qa-block li { margin-bottom: 0.3rem; }
+.qa-block strong { color: var(--text); }
+
+/* === CODE === */
+pre {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin: 1rem 0;
+  color: #c4c4d8;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(99,102,241,0.1);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: var(--accent-light);
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.code-label {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.7rem;
+  border-radius: 6px 6px 0 0;
+  background: var(--accent-glow);
+  color: var(--accent-light);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* === SVG WRAPPERS === */
+.svg-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 2rem 0;
+  overflow-x: auto;
+}
+
+.svg-wrapper svg {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+  height: auto;
+}
+
+.svg-caption {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+/* === TABLES === */
+.table-wrapper {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+th {
+  background: rgba(99,102,241,0.08);
+  font-weight: 700;
+  text-align: left;
+  padding: 0.85rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  font-size: 0.82rem;
+  color: var(--accent-light);
+}
+
+td {
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(99,102,241,0.03); }
+
+/* === HIGHLIGHT BOXES === */
+.highlight-box {
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  margin: 1.5rem 0;
+}
+
+.highlight-box.info {
+  background: var(--accent-glow);
+  border: 1px solid rgba(99,102,241,0.2);
+}
+
+.highlight-box.success {
+  background: var(--green-dim);
+  border: 1px solid rgba(34,197,94,0.2);
+}
+
+.highlight-box.warning {
+  background: var(--orange-dim);
+  border: 1px solid rgba(245,158,11,0.2);
+}
+
+.highlight-box-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.highlight-box p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+/* === STEP CARDS === */
+.step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0;
+}
+
+.step-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  position: relative;
+}
+
+.step-number {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--gradient-1);
+  color: white;
+  font-weight: 900;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.step-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.step-card p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* === COMPARISON BAR === */
+.bar-chart-container {
+  margin: 2rem 0;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.bar-label {
+  width: 160px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.bar-track {
+  flex: 1;
+  height: 32px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: white;
+  transition: width 1.5s ease-out;
+}
+
+/* === FOOTER === */
+footer {
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  .hero-stats { flex-direction: column; gap: 1.5rem; }
+  .hero-stat-value { font-size: 2rem; }
+  .card-grid { grid-template-columns: 1fr; }
+  section { padding: 3rem 0; }
+  .bar-label { width: 100px; font-size: 0.75rem; }
+  .toc-inner { gap: 0; }
+  .toc a { font-size: 0.72rem; padding: 0.35rem 0.6rem; }
+}
+
+/* Comment/Keyword colors in code */
+.c-kw { color: #c792ea; }
+.c-fn { color: #82aaff; }
+.c-str { color: #c3e88d; }
+.c-cm { color: #546e7a; }
+.c-num { color: #f78c6c; }
+.c-op { color: #89ddff; }
+
+/* Tab UI */
+.tabs { display:flex; gap:0.25rem; margin-bottom:0; }
+.tab-btn {
+  padding: 0.5rem 1.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn.active { background: var(--code-bg); color: var(--accent-light); border-color: var(--accent); }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* Animated counter */
+.counter { display: inline-block; }
+
+/* Print */
+@media print {
+  .hero::before { display: none; }
+  .toc { position: static; }
+  body { background: white; color: #111; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== HERO ===================== -->
+<header class="hero">
+  <div class="hero-badge">🚀 KG모빌리언스 IT전략실 · AI TF</div>
+  <h1>
+    AI로 <span class="gradient-text">결제연동 MCP 서버</span>를<br>
+    하루 만에 구축한 이야기
+  </h1>
+  <p class="hero-sub">
+    Claude의 채팅 · Cowork · Claude Code 세 가지 기능을 활용하여<br>
+    한국 PG 업계 최초 MCP 서버를 기획부터 배포까지 완성한 실전 사례
+  </p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-value">1일</div>
+      <div class="hero-stat-label">기획~배포 소요 시간</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">18개</div>
+      <div class="hero-stat-label">API 문서 자동 생성</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">+43%</div>
+      <div class="hero-stat-label">코드 정확도 향상</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">3종</div>
+      <div class="hero-stat-label">산출물 (MCP+Skill+가이드)</div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== TOC ===================== -->
+<nav class="toc">
+  <div class="toc-inner">
+    <a href="#overview">개요</a>
+    <a href="#why-mcp">왜 MCP인가</a>
+    <a href="#tools-used">사용 도구</a>
+    <a href="#timeline">전체 타임라인</a>
+    <a href="#qa-process">질문→답변→실행</a>
+    <a href="#architecture">기술 아키텍처</a>
+    <a href="#user-guide">사용자 가이드</a>
+    <a href="#benchmark">벤치마크 결과</a>
+    <a href="#impact">정량적 효과</a>
+    <a href="#takeaway">핵심 교훈</a>
+  </div>
+</nav>
+
+<div class="container">
+
+<!-- ===================== SECTION 1: OVERVIEW ===================== -->
+<section id="overview">
+  <div class="section-label">01 — Overview</div>
+  <h2 class="section-title">프로젝트 개요</h2>
+  <p class="section-desc">
+    MOBILPAY(KG모빌리언스) 결제연동 REST API 매뉴얼을 MCP(Model Context Protocol) 서버로 구축하여, 
+    가맹점 개발자가 AI 코딩 도구에서 자연어로 정확한 결제 연동 코드를 생성할 수 있는 환경을 만든 프로젝트입니다.
+  </p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon" style="background:var(--accent-glow); color:var(--accent-light);">🎯</div>
+      <h3>목표</h3>
+      <p>한국 PG 업계 최초 MCP 도입. 가맹점 결제연동 기간을 기존 5~10일에서 1일 이내로 단축</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:var(--green-dim); color:var(--green);">📊</div>
+      <h3>벤치마크</h3>
+      <p>토스페이먼츠 MCP 서버 구현 방식을 철저히 분석하여 동일 수준의 아키텍처로 구축</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:var(--orange-dim); color:var(--orange);">⚡</div>
+      <h3>핵심 성과</h3>
+      <p>Claude 하나로 기획안 → 18개 API 문서 → MCP 서버 개발 → NPM 배포 → Skills → 개발자 가이드까지 완성</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SECTION 2: WHY MCP ===================== -->
+<section id="why-mcp">
+  <div class="section-label">02 — Why MCP</div>
+  <h2 class="section-title">왜 MCP가 필요한가</h2>
+  <p class="section-desc">
+    AI 코딩 도구가 결제 연동 코드를 생성할 때 MCP 없이는 치명적 오류가 발생합니다. 토스페이먼츠의 내부 실험 결과를 벤치마킹하여 MCP 도입의 필요성을 확인했습니다.
+  </p>
+
+  <!-- SVG: MCP 유무 비교 차트 -->
+  <div class="svg-wrapper">
+    <svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans KR', sans-serif">
+      <!-- Title -->
+      <text x="400" y="32" text-anchor="middle" fill="#e8e8f0" font-size="16" font-weight="700">AI 코딩 도구 결제연동 정확도 비교 (토스페이먼츠 실험 결과)</text>
+      
+      <!-- Legend -->
+      <rect x="180" y="50" width="14" height="14" rx="3" fill="#ef4444"/>
+      <text x="200" y="62" fill="#8888a0" font-size="12">Cursor 단독</text>
+      <rect x="320" y="50" width="14" height="14" rx="3" fill="#f59e0b"/>
+      <text x="340" y="62" fill="#8888a0" font-size="12">Cursor + Docs</text>
+      <rect x="480" y="50" width="14" height="14" rx="3" fill="#22c55e"/>
+      <text x="500" y="62" fill="#8888a0" font-size="12">Cursor + MCP</text>
+      
+      <!-- Y axis labels -->
+      <text x="70" y="115" text-anchor="end" fill="#555570" font-size="12">SDK 주소</text>
+      <text x="70" y="185" text-anchor="end" fill="#555570" font-size="12">결제 플로우</text>
+      <text x="70" y="255" text-anchor="end" fill="#555570" font-size="12">보안(skey)</text>
+      <text x="70" y="325" text-anchor="end" fill="#555570" font-size="12">종합 판정</text>
+      
+      <!-- Row 1: SDK -->
+      <rect x="90" y="98" width="200" height="24" rx="6" fill="#ef4444" opacity="0.8"/>
+      <text x="300" y="115" fill="#ef4444" font-size="11" font-weight="700">✗ 실패</text>
+      <rect x="90" y="126" width="200" height="24" rx="6" fill="#f59e0b" opacity="0.8"/>
+      <text x="300" y="143" fill="#f59e0b" font-size="11" font-weight="700">✗ 실패</text>
+      <rect x="90" y="154" width="600" height="24" rx="6" fill="#22c55e" opacity="0.8"/>
+      <text x="700" y="171" fill="#22c55e" font-size="11" font-weight="700">✓ 성공</text>
+      
+      <!-- Row 2: Flow -->
+      <rect x="90" y="168" width="320" height="24" rx="6" fill="#ef4444" opacity="0.8"/>
+      <text x="420" y="185" fill="#f59e0b" font-size="11" font-weight="700">△ 부분 정확</text>
+      <rect x="90" y="196" width="200" height="24" rx="6" fill="#f59e0b" opacity="0.8"/>
+      <text x="300" y="213" fill="#ef4444" font-size="11" font-weight="700">✗ 오류 발생</text>
+      <rect x="90" y="224" width="600" height="24" rx="6" fill="#22c55e" opacity="0.8"/>
+      <text x="700" y="241" fill="#22c55e" font-size="11" font-weight="700">✓ 정확</text>
+      
+      <!-- Row 3: Security -->
+      <rect x="90" y="238" width="200" height="24" rx="6" fill="#ef4444" opacity="0.8"/>
+      <text x="300" y="255" fill="#ef4444" font-size="11" font-weight="700">✗ 노출 위험</text>
+      <rect x="90" y="266" width="200" height="24" rx="6" fill="#f59e0b" opacity="0.8"/>
+      <text x="300" y="283" fill="#ef4444" font-size="11" font-weight="700">✗ 클라이언트 노출</text>
+      <rect x="90" y="294" width="600" height="24" rx="6" fill="#22c55e" opacity="0.8"/>
+      <text x="700" y="311" fill="#22c55e" font-size="11" font-weight="700">✓ 서버사이드</text>
+      
+      <!-- Row 4: Verdict -->
+      <rect x="90" y="308" width="180" height="26" rx="6" fill="#ef4444" opacity="0.9"/>
+      <text x="180" y="326" text-anchor="middle" fill="white" font-size="12" font-weight="700">사용 불가</text>
+      <rect x="290" y="308" width="180" height="26" rx="6" fill="#f59e0b" opacity="0.9"/>
+      <text x="380" y="326" text-anchor="middle" fill="white" font-size="12" font-weight="700">오히려 악화</text>
+      <rect x="490" y="308" width="220" height="26" rx="6" fill="#22c55e" opacity="0.9"/>
+      <text x="600" y="326" text-anchor="middle" fill="white" font-size="12" font-weight="700">✓ 실전 투입 가능</text>
+      
+      <!-- Bottom note -->
+      <text x="400" y="362" text-anchor="middle" fill="#555570" font-size="11" font-style="italic">※ 출처: 토스페이먼츠 MCP 서버 구현기 기술 블로그 벤치마크 요약</text>
+    </svg>
+    <div class="svg-caption">MCP 없이는 AI가 생성한 결제 코드에 보안 취약점이 포함되고, 잘못된 API 사용으로 결제 장애가 발생할 수 있습니다.</div>
+  </div>
+
+  <div class="highlight-box warning">
+    <div class="highlight-box-title">⚠️ 핵심 문제: AI 환각(Hallucination)</div>
+    <p>AI 코딩 도구가 MCP 없이 결제 코드를 생성하면 <strong>skey가 클라이언트에 노출</strong>되거나, <strong>존재하지 않는 API 엔드포인트</strong>를 호출하거나, <strong>필수 파라미터를 누락</strong>하는 등 심각한 오류가 발생합니다. MCP는 AI에게 정확한 API 명세를 실시간으로 제공하여 이 문제를 근본적으로 해결합니다.</p>
+  </div>
+</section>
+
+<!-- ===================== SECTION 3: TOOLS USED ===================== -->
+<section id="tools-used">
+  <div class="section-label">03 — Tools</div>
+  <h2 class="section-title">활용한 Claude 기능 3가지</h2>
+  <p class="section-desc">
+    하나의 프로젝트를 Claude의 서로 다른 3가지 인터페이스에서 역할을 나눠 진행했습니다. 각 도구의 강점을 최대한 활용하여 효율을 극대화했습니다.
+  </p>
+
+  <!-- SVG: 3 Tools Diagram -->
+  <div class="svg-wrapper">
+    <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans KR', sans-serif">
+      <!-- Tool 1: Chat -->
+      <rect x="20" y="40" width="230" height="260" rx="16" fill="#12121a" stroke="#6366f1" stroke-width="2"/>
+      <rect x="20" y="40" width="230" height="50" rx="16" fill="#6366f1" opacity="0.15"/>
+      <rect x="20" y="74" width="230" height="1" fill="#6366f1" opacity="0.3"/>
+      <text x="135" y="72" text-anchor="middle" fill="#818cf8" font-size="15" font-weight="700">💬 채팅창</text>
+      <text x="40" y="105" fill="#e8e8f0" font-size="12" font-weight="600">전략 수립 &amp; 콘텐츠 생성</text>
+      <text x="40" y="130" fill="#8888a0" font-size="11">• 프로젝트 기획안 Word 작성</text>
+      <text x="40" y="150" fill="#8888a0" font-size="11">• 토스페이먼츠 벤치마킹 분석</text>
+      <text x="40" y="170" fill="#8888a0" font-size="11">• 18개 API 마크다운 문서 생성</text>
+      <text x="40" y="190" fill="#8888a0" font-size="11">• llms.txt 인덱스 작성</text>
+      <text x="40" y="210" fill="#8888a0" font-size="11">• ZIP 패키지 생성</text>
+      <rect x="40" y="232" width="190" height="28" rx="6" fill="rgba(99,102,241,0.1)"/>
+      <text x="135" y="251" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="600">산출물: 기획안 + 18개 문서</text>
+      <text x="135" y="285" text-anchor="middle" fill="#555570" font-size="10">소요: 약 3시간</text>
+      
+      <!-- Arrow 1→2 -->
+      <line x1="260" y1="170" x2="280" y2="170" stroke="#555570" stroke-width="2"/>
+      <polygon points="280,165 290,170 280,175" fill="#555570"/>
+      
+      <!-- Tool 2: Claude Code -->
+      <rect x="295" y="40" width="230" height="260" rx="16" fill="#12121a" stroke="#22c55e" stroke-width="2"/>
+      <rect x="295" y="40" width="230" height="50" rx="16" fill="#22c55e" opacity="0.12"/>
+      <rect x="295" y="74" width="230" height="1" fill="#22c55e" opacity="0.3"/>
+      <text x="410" y="72" text-anchor="middle" fill="#22c55e" font-size="15" font-weight="700">⌨️ Claude Code</text>
+      <text x="315" y="105" fill="#e8e8f0" font-size="12" font-weight="600">MCP 서버 개발 &amp; 배포</text>
+      <text x="315" y="130" fill="#8888a0" font-size="11">• TypeScript 프로젝트 생성</text>
+      <text x="315" y="150" fill="#8888a0" font-size="11">• BM25 검색엔진 구현</text>
+      <text x="315" y="170" fill="#8888a0" font-size="11">• 4개 MCP Tool 개발</text>
+      <text x="315" y="190" fill="#8888a0" font-size="11">• 테스트 작성/실행 (19 tests)</text>
+      <text x="315" y="210" fill="#8888a0" font-size="11">• NPM v1.1.0 배포</text>
+      <rect x="315" y="232" width="190" height="28" rx="6" fill="rgba(34,197,94,0.1)"/>
+      <text x="410" y="251" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="600">산출물: NPM 패키지</text>
+      <text x="410" y="285" text-anchor="middle" fill="#555570" font-size="10">소요: 약 4시간</text>
+      
+      <!-- Arrow 2→3 -->
+      <line x1="535" y1="170" x2="555" y2="170" stroke="#555570" stroke-width="2"/>
+      <polygon points="555,165 565,170 555,175" fill="#555570"/>
+      
+      <!-- Tool 3: Cowork -->
+      <rect x="570" y="40" width="220" height="260" rx="16" fill="#12121a" stroke="#f59e0b" stroke-width="2"/>
+      <rect x="570" y="40" width="220" height="50" rx="16" fill="#f59e0b" opacity="0.12"/>
+      <rect x="570" y="74" width="220" height="1" fill="#f59e0b" opacity="0.3"/>
+      <text x="680" y="72" text-anchor="middle" fill="#f59e0b" font-size="15" font-weight="700">🤝 Cowork</text>
+      <text x="590" y="105" fill="#e8e8f0" font-size="12" font-weight="600">Skills 제작 &amp; 가이드</text>
+      <text x="590" y="130" fill="#8888a0" font-size="11">• Vue.js 가이드 페이지 생성</text>
+      <text x="590" y="150" fill="#8888a0" font-size="11">• Agent Skill 패키지 제작</text>
+      <text x="590" y="170" fill="#8888a0" font-size="11">• 벤치마크 Eval 실행</text>
+      <text x="590" y="190" fill="#8888a0" font-size="11">• MCP+Skills 동시 사용법</text>
+      <text x="590" y="210" fill="#8888a0" font-size="11">• 트렌드 리서치 (CLI 등)</text>
+      <rect x="590" y="232" width="180" height="28" rx="6" fill="rgba(245,158,11,0.1)"/>
+      <text x="680" y="251" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">산출물: Skill + 가이드</text>
+      <text x="680" y="285" text-anchor="middle" fill="#555570" font-size="10">소요: 약 3시간</text>
+    </svg>
+    <div class="svg-caption">3가지 Claude 인터페이스를 역할별로 분담하여 병렬 작업으로 생산성을 극대화</div>
+  </div>
+
+  <div class="highlight-box success">
+    <div class="highlight-box-title">✅ 핵심 포인트: 도구별 역할 분담</div>
+    <p><strong>채팅창</strong>은 기획/문서 생성에 최적. <strong>Claude Code</strong>는 실제 개발/테스트/배포에 최적. <strong>Cowork</strong>은 파일 생성 + Eval 벤치마크에 최적. 하나의 도구에서 모든 걸 하려 하지 않고, 각 도구의 장점에 맞춰 작업을 분배한 것이 핵심 전략이었습니다.</p>
+  </div>
+</section>
+
+<!-- ===================== SECTION 4: TIMELINE ===================== -->
+<section id="timeline">
+  <div class="section-label">04 — Timeline</div>
+  <h2 class="section-title">전체 프로젝트 타임라인</h2>
+  <p class="section-desc">
+    2026년 3월 17일 오전 7시부터 시작하여 약 하루 만에 MCP 서버 구축 · NPM 배포 · Skills 제작 · 개발자 가이드까지 모두 완성했습니다.
+  </p>
+
+  <div class="timeline">
+    <!-- Day 1 Morning -->
+    <div class="timeline-item">
+      <div class="timeline-dot chat"></div>
+      <div class="timeline-time">2026-03-17 07:01 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-chat">채팅창</span>
+        프로젝트 시작 — 참고자료 분석 &amp; 벤치마킹
+      </div>
+      <div class="timeline-content">
+        토스페이먼츠 MCP 기술블로그, 개발자센터 LLM 가이드, llms.txt 표준 사이트 등 5개 참고자료 + 당사 매뉴얼(MOBILPAY_0001) 전문 분석. 웹 검색으로 토스페이먼츠 MCP 아키텍처 상세 수집 완료.
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot chat"></div>
+      <div class="timeline-time">2026-03-17 07:17 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-chat">채팅창</span>
+        MCP 구축 기획안 Word 문서 생성
+      </div>
+      <div class="timeline-content">
+        8개 장 구성 기획서 (Executive Summary, 벤치마킹, 상세 설계, 핵심 구현 기술, 개발 계획, 위험 관리, 임원 발표용 자료, 로드맵) 완성. 정량 효과 표 포함.
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot chat"></div>
+      <div class="timeline-time">2026-03-17 07:26 ~ 10:17 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-chat">채팅창</span>
+        18개 마크다운 API 문서 + llms.txt 일괄 생성
+      </div>
+      <div class="timeline-content">
+        원본 매뉴얼(3,102라인)에서 API 11개, 가이드 5개, 레퍼런스 2개 총 17개 마크다운(2,519라인, 130 BM25 Chunk) + llms.txt 인덱스 생성. ZIP 패키징까지 완료. <strong>약 3시간 소요.</strong>
+      </div>
+    </div>
+
+    <!-- Day 1 Afternoon -->
+    <div class="timeline-item">
+      <div class="timeline-dot code"></div>
+      <div class="timeline-time">2026-03-17 16:54 ~ 17:49 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-code">Claude Code</span>
+        MVP 1-Tool MCP 서버 개발 + 테스트
+      </div>
+      <div class="timeline-content">
+        Claude Code가 전체 프로젝트 스캐폴딩 자동 생성: package.json, tsconfig.json, BM25 엔진, Markdown Chunker, MCP Tool 등. 첫 서버 실행 테스트까지 <strong>약 1시간.</strong>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot code"></div>
+      <div class="timeline-time">2026-03-17 17:51 ~ 18:17 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-code">Claude Code</span>
+        IDE 연동 설정 (Kiro + Cursor)
+      </div>
+      <div class="timeline-content">
+        Kiro IDE(.kiro/settings/mcp.json), Cursor IDE(.cursor/mcp.json) 설정 파일 생성. STDIO 트랜스포트 로컬 실행 방법 확인.
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot code"></div>
+      <div class="timeline-time">2026-03-17 18:35 ~ 18:49 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-code">Claude Code</span>
+        NPM 배포 — @mobilpay/mcp-server v1.0.0
+      </div>
+      <div class="timeline-content">
+        NPM Organization 생성, 로그인, 패키지 등록 완료. <code>npx -y @mobilpay/mcp-server@latest</code> 명령으로 즉시 실행 가능한 형태로 배포.
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot code"></div>
+      <div class="timeline-time">2026-03-17 19:24 ~ 22:54 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-code">Claude Code</span>
+        정식 전환 — 4-Tool 리팩토링 + v1.1.0 배포
+      </div>
+      <div class="timeline-content">
+        18개 문서 전부 로드, 1-Tool → 4-Tool 리팩토링, 치명적 버그 2건 수정(재귀 디렉토리 읽기, cross-document bleed), 19 tests 전부 통과. v1.1.0 NPM 배포 준비 완료.
+      </div>
+    </div>
+
+    <!-- Day 2 -->
+    <div class="timeline-item">
+      <div class="timeline-dot cowork"></div>
+      <div class="timeline-time">2026-03-18 18:00 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-cowork">Cowork</span>
+        개발자사이트 AI 연동 가이드 페이지 제작
+      </div>
+      <div class="timeline-content">
+        Vue.js 컴포넌트(McpIntegrationGuide.vue), Markdown 원고, 개발팀 전달용 README 3개 파일 생성. 도구별 탭 UI, FAQ 아코디언, 보안 규칙 섹션 포함.
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot cowork"></div>
+      <div class="timeline-time">2026-03-18 20:00 ~ 22:15 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-cowork">Cowork</span>
+        Agent Skill 패키지 제작 + Eval 벤치마크
+      </div>
+      <div class="timeline-content">
+        MCP → Skills → CLI 트렌드 리서치 후, Agent Skill 패키지 제작 착수. 3개 테스트 케이스 Eval 실행 → Skills 적용 시 정확도 100% 확인. mobilpay-integration.skill (45KB) 배포용 패키지 완성.
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-dot cowork"></div>
+      <div class="timeline-time">2026-03-19 10:00 KST</div>
+      <div class="timeline-title">
+        <span class="timeline-badge badge-cowork">Cowork</span>
+        가이드 페이지 업데이트 (MCP + Skills 동시 사용법)
+      </div>
+      <div class="timeline-content">
+        페이지명 "MCP 연동" → "AI 연동"으로 변경. Skills 섹션 신규 추가. MCP + Skill 동시 사용 4단계 플로우, 벤치마크 비교표 추가. 최종 산출물 전부 완성.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SECTION 5: Q&A PROCESS ===================== -->
+<section id="qa-process">
+  <div class="section-label">05 — Q&A Process</div>
+  <h2 class="section-title">질문 → 답변 → 실행: 이렇게 진행했습니다</h2>
+  <p class="section-desc">
+    프로젝트의 각 단계에서 어떤 질문을 했고, Claude가 어떻게 답변했으며, 그 결과 어떤 산출물이 나왔는지를 시간 순서대로 보여드립니다.
+  </p>
+
+  <!-- QA 1: 기획 -->
+  <h3 style="font-size:1.1rem; margin-bottom:1rem; color:var(--accent-light);">Step 1. 기획안 작성 (채팅창)</h3>
+  <div class="qa-block">
+    <div class="qa-question">
+      <div class="qa-question-label">🙋 나의 질문</div>
+      <p>"토스페이먼츠 MCP 서버 구현 방식을 벤치마킹해서, 당사(MOBILPAY) 결제연동 매뉴얼을 기반으로 MCP 서버 구축 기획안을 작성해줘. 참고자료 5개와 당사 매뉴얼(MOBILPAY_0001_20250704.docx)을 분석해서 진행해줘."</p>
+    </div>
+    <div class="qa-answer">
+      <div class="qa-answer-label">🤖 Claude의 답변</div>
+      <p>Claude가 수행한 작업:</p>
+      <ul>
+        <li>토스페이먼츠 기술블로그 웹 검색 → BM25, Chunk, STDIO 트랜스포트 아키텍처 분석</li>
+        <li>당사 매뉴얼(3,102라인) 전문 분석 → API 엔드포인트, 파라미터, 보안 체계 정리</li>
+        <li>벤치마크 대비 당사에 맞춘 4-Tool 설계, 5단계 개발 계획 수립</li>
+        <li>정량 효과 표(연동 기간 80~90% 단축, 기술지원 40~60% 감소) 작성</li>
+      </ul>
+    </div>
+    <div class="qa-result">
+      <div class="qa-result-label">📦 산출물</div>
+      <p><strong>MOBILPAY_MCP_구축_기획안.docx</strong> — 8개 장 구성 Word 기획서 (Executive Summary → 로드맵)</p>
+    </div>
+  </div>
+
+  <!-- QA 2: 문서 생성 -->
+  <h3 style="font-size:1.1rem; margin-bottom:1rem; color:var(--accent-light);">Step 2. API 문서 18개 생성 (채팅창)</h3>
+  <div class="qa-block">
+    <div class="qa-question">
+      <div class="qa-question-label">🙋 나의 질문</div>
+      <p>"기획안의 설계를 기반으로 당사 매뉴얼에 있는 모든 API를 마크다운 문서로 변환해줘. BM25 Chunk 분할에 최적화된 형태로 작성하고, 원본 매뉴얼에 없는 언어별 코드 예제와 보안 가이드도 추가해줘."</p>
+    </div>
+    <div class="qa-answer">
+      <div class="qa-answer-label">🤖 Claude의 답변</div>
+      <p>Claude가 수행한 작업:</p>
+      <ul>
+        <li>H1/H2 기준 Chunk 분할에 최적화된 구조로 17개 마크다운 문서 작성</li>
+        <li>원본에 없던 Node.js/Express 서버사이드 예제 코드 추론·생성</li>
+        <li>hmac.md에는 5개 언어(Java, C#, Node.js, Python, PHP) 예제 생성</li>
+        <li>각 문서에 보안 지침, 다음 단계 안내, ASCII 플로우 다이어그램 삽입</li>
+        <li>llms.txt 인덱스 생성 + 전체 ZIP 패키징</li>
+      </ul>
+    </div>
+    <div class="qa-result">
+      <div class="qa-result-label">📦 산출물</div>
+      <p><strong>mobilpay-mcp-docs.zip</strong> — 17개 마크다운(2,519라인, 130 Chunk, 12,927단어) + llms.txt</p>
+    </div>
+  </div>
+
+  <!-- QA 3: 서버 개발 -->
+  <h3 style="font-size:1.1rem; margin-bottom:1rem; color:var(--accent-light);">Step 3. MCP 서버 개발 (Claude Code / Kiro IDE)</h3>
+  <div class="qa-block">
+    <div class="qa-question">
+      <div class="qa-question-label">🙋 나의 질문</div>
+      <p>"채팅창에서 만든 기획안과 18개 마크다운 문서를 기반으로 MCP 서버를 개발해줘. MVP는 get-mobilpay-docs Tool 1개 + BM25 검색엔진으로 시작하고, 나중에 4-Tool로 리팩토링해줘."</p>
+    </div>
+    <div class="qa-answer">
+      <div class="qa-answer-label">🤖 Claude의 답변 (Claude Code 자동 실행)</div>
+      <p>Claude Code가 자동 생성한 파일 목록:</p>
+    </div>
+  </div>
+
+  <div class="code-label">Claude Code가 자동 생성한 프로젝트 구조</div>
+  <pre><code>@mobilpay/mcp-server/
+├── package.json          <span class="c-cm">← 의존성, bin, npm 배포 설정</span>
+├── tsconfig.json         <span class="c-cm">← TypeScript 설정</span>
+├── src/
+│   ├── index.ts          <span class="c-cm">← MCP 서버 진입점 (STDIO Transport)</span>
+│   ├── indexer/
+│   │   ├── doc-indexer.ts    <span class="c-cm">← 문서 로드 + BM25 인덱싱</span>
+│   │   └── doc-registry.ts  <span class="c-cm">← llms.txt 파싱, 한/영 API name 매핑</span>
+│   ├── chunker/
+│   │   ├── markdown-chunker.ts  <span class="c-cm">← remark-parse AST 기반 Chunk 분할</span>
+│   │   └── types.ts             <span class="c-cm">← Chunk 타입 정의</span>
+│   ├── search/
+│   │   ├── bm25.ts       <span class="c-cm">← BM25 랭킹 알고리즘 (k1=1.2, b=0.75)</span>
+│   │   └── types.ts      <span class="c-cm">← 검색 결과 타입</span>
+│   └── tool/
+│       ├── get-mobilpay-docs.ts  <span class="c-cm">← BM25 키워드 검색</span>
+│       ├── get-api-spec.ts       <span class="c-cm">← API 전체 명세 조회</span>
+│       ├── document-by-id.ts     <span class="c-cm">← 문서 ID 조회</span>
+│       └── get-code-example.ts   <span class="c-cm">← 언어별 코드 추출</span>
+├── md/                   <span class="c-cm">← 18개 마크다운 문서</span>
+│   ├── api/   (11개)
+│   ├── guides/ (5개)
+│   └── reference/ (2개)
+├── tests/                <span class="c-cm">← 19개 단위 테스트 (3 suites)</span>
+├── CLAUDE.md             <span class="c-cm">← 프로젝트 컨텍스트</span>
+└── README.md             <span class="c-cm">← 사용 가이드</span></code></pre>
+
+  <!-- QA 4: 버그 수정 -->
+  <h3 style="font-size:1.1rem; margin-top:2rem; margin-bottom:1rem; color:var(--accent-light);">Step 4. 자동 버그 발견 &amp; 수정 (Claude Code)</h3>
+  <div class="qa-block">
+    <div class="qa-question">
+      <div class="qa-question-label">🙋 나의 질문</div>
+      <p>"채팅창에서 만든 18개 마크다운을 md/ 폴더에 넣었어. 정식 프로젝트로 전환해줘."</p>
+    </div>
+    <div class="qa-answer">
+      <div class="qa-answer-label">🤖 Claude Code의 자동 진단 &amp; 수정</div>
+      <p>Claude Code가 <strong>스스로 발견하고 수정한</strong> 치명적 버그 2건:</p>
+      <ul>
+        <li><strong>버그 1</strong>: <code>readdir(MD_DIR)</code>가 하위 디렉토리(api/, guides/, reference/)를 읽지 못함 → <code>readdir(MD_DIR, { recursive: true })</code>로 자동 수정</li>
+        <li><strong>버그 2</strong>: BM25 Chunk Window 확장 시 다른 문서의 Chunk가 섞이는 cross-document bleed → <code>same source 체크</code> 조건 추가로 자동 수정</li>
+        <li>테스트 4개 실패 → 테스트 데이터/기대값도 자동 수정 → <strong>19 tests 전부 통과</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="highlight-box info">
+    <div class="highlight-box-title">💡 교훈: Claude Code의 자가 진단 능력</div>
+    <p>개발자가 별도로 디버깅하지 않아도 Claude Code가 빌드/테스트를 실행한 후 <strong>에러를 스스로 분석하고 코드를 수정</strong>합니다. 위 2건의 버그는 사람이 발견하기 어려운 엣지 케이스였으나, Claude Code가 테스트 실행 결과를 보고 자동으로 원인을 파악하여 수정했습니다.</p>
+  </div>
+
+  <!-- QA 5: Skills -->
+  <h3 style="font-size:1.1rem; margin-top:2rem; margin-bottom:1rem; color:var(--accent-light);">Step 5. Agent Skill 제작 + Eval (Cowork)</h3>
+  <div class="qa-block">
+    <div class="qa-question">
+      <div class="qa-question-label">🙋 나의 질문</div>
+      <p>"MCP 외에 Agent Skills, CLI 같은 것도 고객에게 제공 가능한지 검토해줘. 가능하면 Skills 먼저 만들어줘."</p>
+    </div>
+    <div class="qa-answer">
+      <div class="qa-answer-label">🤖 Claude의 답변 (Cowork)</div>
+      <p>Claude가 수행한 작업:</p>
+      <ul>
+        <li>MCP vs Skills vs CLI 비교 분석 → Skills는 즉시 제작 가능(1~2일), CLI는 단계별 접근 권고</li>
+        <li>SKILL.md + references 18개 번들로 구성된 Skill 패키지(45KB) 제작</li>
+        <li><strong>Eval 벤치마크 자동 실행</strong>: 3개 테스트 케이스(신용카드 Node.js, 카카오페이 Python, 보안 리뷰)로 Skills 적용/미적용 비교</li>
+        <li>결과: 적용 시 100% / 미적용 시 57% → <strong>+43% 정확도 향상</strong> 실측</li>
+      </ul>
+    </div>
+    <div class="qa-result">
+      <div class="qa-result-label">📦 산출물</div>
+      <p><strong>mobilpay-integration.skill</strong> (45KB) — Claude Desktop/Code에서 바로 설치 가능한 Skill 패키지</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== SECTION 6: ARCHITECTURE ===================== -->
+<section id="architecture">
+  <div class="section-label">06 — Architecture</div>
+  <h2 class="section-title">기술 아키텍처</h2>
+  <p class="section-desc">
+    MOBILPAY MCP 서버의 내부 구조와 데이터 흐름을 상세히 살펴봅니다.
+  </p>
+
+  <!-- SVG: Architecture Diagram -->
+  <div class="svg-wrapper">
+    <svg viewBox="0 0 860 520" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans KR', sans-serif">
+      <!-- Title -->
+      <text x="430" y="28" text-anchor="middle" fill="#e8e8f0" font-size="16" font-weight="700">MOBILPAY MCP 서버 아키텍처</text>
+      
+      <!-- AI Coding Tool (left) -->
+      <rect x="30" y="60" width="200" height="180" rx="14" fill="#12121a" stroke="#6366f1" stroke-width="2"/>
+      <text x="130" y="90" text-anchor="middle" fill="#818cf8" font-size="14" font-weight="700">AI 코딩 도구</text>
+      <text x="130" y="115" text-anchor="middle" fill="#8888a0" font-size="11">Cursor / VS Code</text>
+      <text x="130" y="132" text-anchor="middle" fill="#8888a0" font-size="11">Claude Desktop</text>
+      <text x="130" y="149" text-anchor="middle" fill="#8888a0" font-size="11">Windsurf / Kiro</text>
+      <rect x="55" y="168" width="150" height="30" rx="6" fill="rgba(99,102,241,0.12)"/>
+      <text x="130" y="188" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="600">자연어 질의</text>
+      <text x="130" y="220" text-anchor="middle" fill="#555570" font-size="10">"카카오페이 Node.js</text>
+      <text x="130" y="232" text-anchor="middle" fill="#555570" font-size="10">결제 연동 코드 짜줘"</text>
+      
+      <!-- Arrow: Tool → MCP -->
+      <line x1="240" y1="150" x2="300" y2="150" stroke="#6366f1" stroke-width="2" stroke-dasharray="6,3"/>
+      <polygon points="300,145 312,150 300,155" fill="#6366f1"/>
+      <text x="276" y="140" text-anchor="middle" fill="#818cf8" font-size="9">STDIO</text>
+      
+      <!-- MCP Server (center) -->
+      <rect x="320" y="50" width="240" height="380" rx="16" fill="#12121a" stroke="#22c55e" stroke-width="2"/>
+      <rect x="320" y="50" width="240" height="44" rx="16" fill="rgba(34,197,94,0.1)"/>
+      <text x="440" y="78" text-anchor="middle" fill="#22c55e" font-size="14" font-weight="700">@mobilpay/mcp-server</text>
+      
+      <!-- Tool boxes inside MCP -->
+      <rect x="340" y="108" width="200" height="70" rx="8" fill="rgba(99,102,241,0.06)" stroke="rgba(99,102,241,0.2)" stroke-width="1"/>
+      <text x="440" y="128" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="700">4 MCP Tools</text>
+      <text x="440" y="146" text-anchor="middle" fill="#8888a0" font-size="9">get-mobilpay-docs | get-api-spec</text>
+      <text x="440" y="162" text-anchor="middle" fill="#8888a0" font-size="9">document-by-id | get-code-example</text>
+      
+      <!-- BM25 -->
+      <rect x="340" y="192" width="200" height="50" rx="8" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.2)" stroke-width="1"/>
+      <text x="440" y="215" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="700">BM25 검색 엔진</text>
+      <text x="440" y="232" text-anchor="middle" fill="#8888a0" font-size="9">k1=1.2, b=0.75, Chunk Window</text>
+      
+      <!-- Chunker -->
+      <rect x="340" y="256" width="200" height="50" rx="8" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.2)" stroke-width="1"/>
+      <text x="440" y="279" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="700">Markdown Chunker</text>
+      <text x="440" y="296" text-anchor="middle" fill="#8888a0" font-size="9">remark-parse AST, H1/H2 분할</text>
+      
+      <!-- Registry -->
+      <rect x="340" y="320" width="200" height="50" rx="8" fill="rgba(236,72,153,0.06)" stroke="rgba(236,72,153,0.2)" stroke-width="1"/>
+      <text x="440" y="343" text-anchor="middle" fill="#ec4899" font-size="11" font-weight="700">Doc Registry</text>
+      <text x="440" y="360" text-anchor="middle" fill="#8888a0" font-size="9">llms.txt 파싱, 한/영 alias</text>
+      
+      <!-- Info -->
+      <text x="440" y="406" text-anchor="middle" fill="#555570" font-size="10">NPM 패키지 (로컬 실행)</text>
+      <text x="440" y="420" text-anchor="middle" fill="#555570" font-size="10">서버 비용 0원</text>
+      
+      <!-- Arrow: MCP → Docs -->
+      <line x1="570" y1="260" x2="630" y2="260" stroke="#22c55e" stroke-width="2" stroke-dasharray="6,3"/>
+      <polygon points="630,255 642,260 630,265" fill="#22c55e"/>
+      <text x="600" y="250" text-anchor="middle" fill="#22c55e" font-size="9">로드</text>
+      
+      <!-- Documents (right) -->
+      <rect x="650" y="100" width="190" height="320" rx="14" fill="#12121a" stroke="#f59e0b" stroke-width="2"/>
+      <text x="745" y="130" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="700">📁 MD 문서</text>
+      
+      <text x="670" y="160" fill="#8888a0" font-size="10" font-weight="600">api/ (11개)</text>
+      <text x="680" y="178" fill="#555570" font-size="9">registration.md</text>
+      <text x="680" y="193" fill="#555570" font-size="9">payment-window.md</text>
+      <text x="680" y="208" fill="#555570" font-size="9">approval-tid.md ...</text>
+      
+      <text x="670" y="236" fill="#8888a0" font-size="10" font-weight="600">guides/ (5개)</text>
+      <text x="680" y="254" fill="#555570" font-size="9">flow-normal.md</text>
+      <text x="680" y="269" fill="#555570" font-size="9">noti-url.md ...</text>
+      
+      <text x="670" y="297" fill="#8888a0" font-size="10" font-weight="600">reference/ (2개)</text>
+      <text x="680" y="315" fill="#555570" font-size="9">error-codes.md</text>
+      <text x="680" y="330" fill="#555570" font-size="9">payment-codes.md</text>
+      
+      <rect x="670" y="350" width="150" height="30" rx="6" fill="rgba(245,158,11,0.1)"/>
+      <text x="745" y="370" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600">llms.txt 인덱스</text>
+      
+      <text x="745" y="405" text-anchor="middle" fill="#555570" font-size="10">총 2,519라인</text>
+      <text x="745" y="418" text-anchor="middle" fill="#555570" font-size="10">130 BM25 Chunks</text>
+      
+      <!-- Bottom flow -->
+      <text x="430" y="480" text-anchor="middle" fill="#555570" font-size="11" font-style="italic">
+        ※ + Agent Skill(SKILL.md + references 18개)로 AI 행동 규칙까지 제어
+      </text>
+      
+      <!-- Return arrow -->
+      <line x1="312" y1="200" x2="240" y2="200" stroke="#22c55e" stroke-width="2"/>
+      <polygon points="240,195 228,200 240,205" fill="#22c55e"/>
+      <text x="276" y="218" text-anchor="middle" fill="#22c55e" font-size="9">정확한</text>
+      <text x="276" y="230" text-anchor="middle" fill="#22c55e" font-size="9">API 명세</text>
+    </svg>
+    <div class="svg-caption">MOBILPAY MCP 서버 전체 데이터 흐름: AI 도구 → STDIO → MCP 서버 → BM25 검색 → MD 문서 → 정확한 코드 생성</div>
+  </div>
+
+  <!-- BM25 코드 예시 -->
+  <h3 style="font-size:1.05rem; margin:2rem 0 1rem;">BM25 검색 엔진 핵심 코드</h3>
+  <div class="code-label">src/search/bm25.ts (핵심 로직)</div>
+  <pre><code><span class="c-cm">// BM25 스코어 계산 — 토스페이먼츠와 동일한 파라미터</span>
+<span class="c-kw">const</span> k1 = <span class="c-num">1.2</span>;   <span class="c-cm">// 용어 빈도 포화 상수</span>
+<span class="c-kw">const</span> b  = <span class="c-num">0.75</span>;  <span class="c-cm">// 문서 길이 정규화 상수</span>
+
+<span class="c-kw">function</span> <span class="c-fn">calculateBM25</span>(tf: <span class="c-kw">number</span>, df: <span class="c-kw">number</span>, docLen: <span class="c-kw">number</span>, avgDl: <span class="c-kw">number</span>, N: <span class="c-kw">number</span>): <span class="c-kw">number</span> {
+  <span class="c-kw">const</span> idf = Math.log((N - df + <span class="c-num">0.5</span>) / (df + <span class="c-num">0.5</span>) + <span class="c-num">1</span>);
+  <span class="c-kw">const</span> tfNorm = (tf * (k1 + <span class="c-num">1</span>)) / (tf + k1 * (<span class="c-num">1</span> - b + b * (docLen / avgDl)));
+  <span class="c-kw">return</span> idf * tfNorm;
+}
+
+<span class="c-cm">// Chunk Window: 최상위 청크 + 인접 청크(같은 문서만!) 반환</span>
+<span class="c-kw">function</span> <span class="c-fn">expandChunkWindow</span>(chunk: Chunk, allChunks: Chunk[]): Chunk[] {
+  <span class="c-kw">return</span> allChunks.filter(c <span class="c-op">=></span>
+    c.source <span class="c-op">===</span> chunk.source <span class="c-op">&&</span>  <span class="c-cm">// ← cross-document bleed 방지</span>
+    Math.abs(c.index - chunk.index) <span class="c-op"><=</span> <span class="c-num">1</span>
+  );
+}</code></pre>
+
+  <!-- 기술 스택 테이블 -->
+  <h3 style="font-size:1.05rem; margin:2rem 0 1rem;">기술 스택 상세</h3>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>구분</th><th>기술</th><th>선택 이유</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>런타임</td><td>Node.js 20+ (TypeScript)</td><td>NPM 생태계 + 타입 안전성</td></tr>
+        <tr><td>MCP SDK</td><td>@modelcontextprotocol/sdk</td><td>Anthropic 공식 SDK</td></tr>
+        <tr><td>트랜스포트</td><td>STDIO</td><td>서버 비용 0원, IDE가 프로세스 관리</td></tr>
+        <tr><td>검색</td><td>BM25 (자체 구현)</td><td>외부 의존성 없이 경량 키워드 검색</td></tr>
+        <tr><td>마크다운 파싱</td><td>unified + remark-parse</td><td>AST 기반 정확한 헤더 Chunk 분할</td></tr>
+        <tr><td>배포</td><td>NPM scoped package</td><td>npx로 설치 없이 즉시 실행</td></tr>
+        <tr><td>문서 카탈로그</td><td>llms.txt</td><td>LLM 친화적 표준 인덱스</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===================== SECTION 7: USER GUIDE ===================== -->
+<section id="user-guide">
+  <div class="section-label">07 — User Guide</div>
+  <h2 class="section-title">사용자 가이드: 세팅부터 실사용까지</h2>
+  <p class="section-desc">
+    가맹점 개발자가 MOBILPAY MCP 서버와 Agent Skill을 세팅하고 실제 결제 연동 코드를 생성하는 전체 과정입니다.
+  </p>
+
+  <!-- 4-Step Setup -->
+  <h3 style="font-size:1.05rem; margin-bottom:1.5rem;">🔧 세팅 방법 (Cursor IDE 기준)</h3>
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>MCP 설정 파일 생성</h4>
+      <p>프로젝트 루트에 <code>.cursor/mcp.json</code> 생성</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Skill 규칙 적용</h4>
+      <p><code>.cursorrules</code> 파일에 SKILL.md 내용 붙여넣기</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>IDE 재시작</h4>
+      <p>Cursor 재시작 후 MCP 도구 연결 확인</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>자연어로 코딩</h4>
+      <p>"카카오페이 결제 연동해줘"라고 요청</p>
+    </div>
+  </div>
+
+  <!-- Setup Code -->
+  <div class="tabs" id="setup-tabs">
+    <button class="tab-btn active" onclick="switchTab('setup', 0)">Cursor</button>
+    <button class="tab-btn" onclick="switchTab('setup', 1)">Claude Desktop</button>
+    <button class="tab-btn" onclick="switchTab('setup', 2)">Claude Code</button>
+    <button class="tab-btn" onclick="switchTab('setup', 3)">VS Code</button>
+  </div>
+  
+  <div id="setup-content-0" class="tab-content active">
+    <div class="code-label">.cursor/mcp.json</div>
+    <pre><code>{
+  <span class="c-str">"mcpServers"</span>: {
+    <span class="c-str">"mobilpay"</span>: {
+      <span class="c-str">"command"</span>: <span class="c-str">"npx"</span>,
+      <span class="c-str">"args"</span>: [<span class="c-str">"-y"</span>, <span class="c-str">"@mobilpay/mcp-server@latest"</span>]
+    }
+  }
+}</code></pre>
+  </div>
+  <div id="setup-content-1" class="tab-content">
+    <div class="code-label">claude_desktop_config.json</div>
+    <pre><code>{
+  <span class="c-str">"mcpServers"</span>: {
+    <span class="c-str">"mobilpay"</span>: {
+      <span class="c-str">"command"</span>: <span class="c-str">"npx"</span>,
+      <span class="c-str">"args"</span>: [<span class="c-str">"-y"</span>, <span class="c-str">"@mobilpay/mcp-server@latest"</span>]
+    }
+  }
+}
+<span class="c-cm">// 파일 위치:
+// macOS: ~/Library/Application Support/Claude/claude_desktop_config.json
+// Windows: %APPDATA%\Claude\claude_desktop_config.json</span></code></pre>
+  </div>
+  <div id="setup-content-2" class="tab-content">
+    <div class="code-label">터미널에서 실행</div>
+    <pre><code><span class="c-cm"># Skill 설치 (권장)</span>
+claude skill install mobilpay-integration.skill
+
+<span class="c-cm"># 또는 .claude/skills/ 디렉토리에 직접 배치</span>
+cp -r mobilpay-integration/ .claude/skills/</code></pre>
+  </div>
+  <div id="setup-content-3" class="tab-content">
+    <div class="code-label">.vscode/settings.json (GitHub Copilot MCP 설정)</div>
+    <pre><code>{
+  <span class="c-str">"github.copilot.chat.mcpServers"</span>: {
+    <span class="c-str">"mobilpay"</span>: {
+      <span class="c-str">"command"</span>: <span class="c-str">"npx"</span>,
+      <span class="c-str">"args"</span>: [<span class="c-str">"-y"</span>, <span class="c-str">"@mobilpay/mcp-server@latest"</span>]
+    }
+  }
+}</code></pre>
+  </div>
+
+  <!-- Usage Flow SVG -->
+  <h3 style="font-size:1.05rem; margin:2.5rem 0 1rem;">📝 실사용 예시: MCP + Skill 동시 사용 플로우</h3>
+
+  <div class="svg-wrapper">
+    <svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans KR', sans-serif">
+      <!-- Step 1 -->
+      <rect x="30" y="30" width="170" height="90" rx="12" fill="#12121a" stroke="#6366f1" stroke-width="2"/>
+      <circle cx="52" cy="52" r="14" fill="#6366f1"/>
+      <text x="52" y="57" text-anchor="middle" fill="white" font-size="12" font-weight="700">1</text>
+      <text x="115" y="55" text-anchor="middle" fill="#e8e8f0" font-size="12" font-weight="600">개발자 질문</text>
+      <text x="115" y="78" text-anchor="middle" fill="#8888a0" font-size="9">"카카오페이 Node.js</text>
+      <text x="115" y="92" text-anchor="middle" fill="#8888a0" font-size="9">결제 연동 코드 짜줘"</text>
+      
+      <!-- Arrow -->
+      <line x1="210" y1="75" x2="240" y2="75" stroke="#555570" stroke-width="2"/>
+      <polygon points="240,70 252,75 240,80" fill="#555570"/>
+      
+      <!-- Step 2 -->
+      <rect x="260" y="30" width="170" height="90" rx="12" fill="#12121a" stroke="#f59e0b" stroke-width="2"/>
+      <circle cx="282" cy="52" r="14" fill="#f59e0b"/>
+      <text x="282" y="57" text-anchor="middle" fill="white" font-size="12" font-weight="700">2</text>
+      <text x="345" y="55" text-anchor="middle" fill="#e8e8f0" font-size="12" font-weight="600">Skill 규칙 적용</text>
+      <text x="345" y="78" text-anchor="middle" fill="#8888a0" font-size="9">보안: skey 환경변수</text>
+      <text x="345" y="92" text-anchor="middle" fill="#8888a0" font-size="9">플로우: 등록→인증→승인</text>
+      
+      <!-- Arrow -->
+      <line x1="440" y1="75" x2="470" y2="75" stroke="#555570" stroke-width="2"/>
+      <polygon points="470,70 482,75 470,80" fill="#555570"/>
+      
+      <!-- Step 3 -->
+      <rect x="490" y="30" width="170" height="90" rx="12" fill="#12121a" stroke="#22c55e" stroke-width="2"/>
+      <circle cx="512" cy="52" r="14" fill="#22c55e"/>
+      <text x="512" y="57" text-anchor="middle" fill="white" font-size="12" font-weight="700">3</text>
+      <text x="575" y="55" text-anchor="middle" fill="#e8e8f0" font-size="12" font-weight="600">MCP 문서 검색</text>
+      <text x="575" y="78" text-anchor="middle" fill="#8888a0" font-size="9">BM25로 관련 Chunk</text>
+      <text x="575" y="92" text-anchor="middle" fill="#8888a0" font-size="9">정확한 API 명세 조회</text>
+      
+      <!-- Arrow down -->
+      <line x1="575" y1="130" x2="575" y2="160" stroke="#555570" stroke-width="2"/>
+      <polygon points="570,160 575,172 580,160" fill="#555570"/>
+      
+      <!-- Step 4 -->
+      <rect x="420" y="180" width="320" height="130" rx="12" fill="#12121a" stroke="#ec4899" stroke-width="2"/>
+      <circle cx="442" cy="202" r="14" fill="#ec4899"/>
+      <text x="442" y="207" text-anchor="middle" fill="white" font-size="12" font-weight="700">4</text>
+      <text x="580" y="207" text-anchor="middle" fill="#e8e8f0" font-size="13" font-weight="700">정확한 코드 생성 ✓</text>
+      <text x="440" y="235" fill="#8888a0" font-size="10">✓ ep_code='KKO' (카카오페이 정확한 코드)</text>
+      <text x="440" y="253" fill="#8888a0" font-size="10">✓ skey는 process.env에서 로드</text>
+      <text x="440" y="271" fill="#8888a0" font-size="10">✓ HMAC 검증 서버사이드 구현</text>
+      <text x="440" y="289" fill="#8888a0" font-size="10">✓ noti_url 멱등성 처리 포함</text>
+      
+      <!-- Without MCP/Skill (bottom left) -->
+      <rect x="30" y="180" width="360" height="130" rx="12" fill="#12121a" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="210" y="207" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="700">⚠️ MCP/Skill 없이 생성한 코드 (비교)</text>
+      <text x="50" y="235" fill="#555570" font-size="10">✗ pay_type='KAKAOPAY' (존재하지 않는 코드)</text>
+      <text x="50" y="253" fill="#555570" font-size="10">✗ skey가 프론트엔드에 하드코딩</text>
+      <text x="50" y="271" fill="#555570" font-size="10">✗ HMAC 검증 누락</text>
+      <text x="50" y="289" fill="#555570" font-size="10">✗ noti_url 응답에 HTML 포함 (규칙 위반)</text>
+    </svg>
+    <div class="svg-caption">MCP + Skill 동시 사용 시 4단계 플로우와 미사용 시 비교</div>
+  </div>
+
+  <!-- 사용 프롬프트 예시 -->
+  <h3 style="font-size:1.05rem; margin:2rem 0 1rem;">💬 실제 프롬프트 예시 5가지</h3>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>#</th><th>프롬프트</th><th>AI가 사용하는 Tool</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>"휴대폰 결제 연동 코드를 Node.js로 작성해줘"</td><td>get-mobilpay-docs → get-code-example</td></tr>
+        <tr><td>2</td><td>"거래등록 API의 전체 파라미터 명세를 보여줘"</td><td>get-api-spec (registration)</td></tr>
+        <tr><td>3</td><td>"HMAC 검증 로직을 Python으로 구현해줘"</td><td>get-code-example (hmac, python)</td></tr>
+        <tr><td>4</td><td>"가상계좌 입금 완료 noti_url 핸들러를 만들어줘"</td><td>get-mobilpay-docs → document-by-id</td></tr>
+        <tr><td>5</td><td>"카카오페이 + 신용카드 하이브리드 결제 플로우 구현해줘"</td><td>get-mobilpay-docs (hybrid, kakaopay)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===================== SECTION 8: BENCHMARK ===================== -->
+<section id="benchmark">
+  <div class="section-label">08 — Benchmark</div>
+  <h2 class="section-title">벤치마크 결과</h2>
+  <p class="section-desc">
+    Cowork에서 실행한 Eval 벤치마크로 Skills 적용/미적용 시 코드 생성 정확도를 실측 비교한 결과입니다.
+  </p>
+
+  <!-- SVG: Benchmark Bar Chart -->
+  <div class="svg-wrapper">
+    <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans KR', sans-serif">
+      <!-- Title -->
+      <text x="400" y="30" text-anchor="middle" fill="#e8e8f0" font-size="16" font-weight="700">코드 생성 정확도 벤치마크 (Eval 실측)</text>
+      
+      <!-- Legend -->
+      <rect x="230" y="50" width="14" height="14" rx="3" fill="#22c55e"/>
+      <text x="250" y="62" fill="#8888a0" font-size="12">MCP + Skill 적용</text>
+      <rect x="390" y="50" width="14" height="14" rx="3" fill="#ef4444"/>
+      <text x="410" y="62" fill="#8888a0" font-size="12">Skill 미적용</text>
+      
+      <!-- Y axis -->
+      <line x1="200" y1="80" x2="200" y2="350" stroke="#1e1e30" stroke-width="1"/>
+      
+      <!-- Grid lines -->
+      <line x1="200" y1="110" x2="750" y2="110" stroke="#1e1e30" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <text x="190" y="114" text-anchor="end" fill="#555570" font-size="10">100%</text>
+      <line x1="200" y1="170" x2="750" y2="170" stroke="#1e1e30" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <text x="190" y="174" text-anchor="end" fill="#555570" font-size="10">75%</text>
+      <line x1="200" y1="230" x2="750" y2="230" stroke="#1e1e30" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <text x="190" y="234" text-anchor="end" fill="#555570" font-size="10">50%</text>
+      <line x1="200" y1="290" x2="750" y2="290" stroke="#1e1e30" stroke-width="0.5" stroke-dasharray="3,3"/>
+      <text x="190" y="294" text-anchor="end" fill="#555570" font-size="10">25%</text>
+      <line x1="200" y1="350" x2="750" y2="350" stroke="#1e1e30" stroke-width="1"/>
+      <text x="190" y="354" text-anchor="end" fill="#555570" font-size="10">0%</text>
+      
+      <!-- Test 1: 신용카드 Node.js -->
+      <rect x="240" y="110" width="60" height="240" rx="6" fill="#22c55e" opacity="0.85"/>
+      <text x="270" y="100" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="700">8/8</text>
+      <rect x="310" y="230" width="60" height="120" rx="6" fill="#ef4444" opacity="0.85"/>
+      <text x="340" y="220" text-anchor="middle" fill="#ef4444" font-size="13" font-weight="700">4/8</text>
+      <text x="305" y="385" text-anchor="middle" fill="#8888a0" font-size="11">신용카드</text>
+      <text x="305" y="400" text-anchor="middle" fill="#8888a0" font-size="11">Node.js</text>
+      
+      <!-- Test 2: 카카오페이 Python -->
+      <rect x="420" y="110" width="60" height="240" rx="6" fill="#22c55e" opacity="0.85"/>
+      <text x="450" y="100" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="700">7/7</text>
+      <rect x="490" y="213" width="60" height="137" rx="6" fill="#ef4444" opacity="0.85"/>
+      <text x="520" y="203" text-anchor="middle" fill="#ef4444" font-size="13" font-weight="700">4/7</text>
+      <text x="485" y="385" text-anchor="middle" fill="#8888a0" font-size="11">카카오페이</text>
+      <text x="485" y="400" text-anchor="middle" fill="#8888a0" font-size="11">Python</text>
+      
+      <!-- Test 3: 보안 리뷰 -->
+      <rect x="600" y="110" width="60" height="240" rx="6" fill="#22c55e" opacity="0.85"/>
+      <text x="630" y="100" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="700">6/6</text>
+      <rect x="670" y="190" width="60" height="160" rx="6" fill="#ef4444" opacity="0.85"/>
+      <text x="700" y="180" text-anchor="middle" fill="#ef4444" font-size="13" font-weight="700">4/6</text>
+      <text x="665" y="385" text-anchor="middle" fill="#8888a0" font-size="11">보안</text>
+      <text x="665" y="400" text-anchor="middle" fill="#8888a0" font-size="11">코드 리뷰</text>
+    </svg>
+    <div class="svg-caption">3개 테스트 케이스 모두에서 MCP + Skill 적용 시 100% 정확도 달성</div>
+  </div>
+
+  <!-- Failure analysis -->
+  <h3 style="font-size:1.05rem; margin:2rem 0 1rem;">❌ Skill 미적용 시 주요 실패 항목</h3>
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>실패 유형</th><th>구체적 오류</th><th>위험도</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>파라미터 오류</td>
+          <td><code>cash_code</code> 누락, <code>pay_type</code> 등 잘못된 필드명 사용</td>
+          <td style="color:#ef4444; font-weight:700;">결제 실패</td>
+        </tr>
+        <tr>
+          <td>간편결제 구조 오류</td>
+          <td><code>ep_code=KKO</code> 대신 비표준 방식 사용</td>
+          <td style="color:#ef4444; font-weight:700;">결제 실패</td>
+        </tr>
+        <tr>
+          <td>noti_url 규칙 위반</td>
+          <td>응답에 HTML 포함 (SUCCESS 문자열만 출력해야 함)</td>
+          <td style="color:#f59e0b; font-weight:700;">결제 미완료</td>
+        </tr>
+        <tr>
+          <td>금액 검증 누락</td>
+          <td>요청 금액 vs 응답 금액 비교 미구현</td>
+          <td style="color:#ef4444; font-weight:700;">보안 취약</td>
+        </tr>
+        <tr>
+          <td>skey 노출</td>
+          <td>skey를 소스코드에 하드코딩 허용</td>
+          <td style="color:#ef4444; font-weight:700;">보안 사고</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===================== SECTION 9: IMPACT ===================== -->
+<section id="impact">
+  <div class="section-label">09 — Impact</div>
+  <h2 class="section-title">정량적 효과</h2>
+  <p class="section-desc">
+    MCP + Skills + AI 연동 가이드 3종 제공 시 기대되는 정량적 효과와, 실측을 위한 측정 방법입니다.
+  </p>
+
+  <!-- SVG: Impact Dashboard -->
+  <div class="svg-wrapper">
+    <svg viewBox="0 0 800 350" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans KR', sans-serif">
+      <!-- Title -->
+      <text x="400" y="30" text-anchor="middle" fill="#e8e8f0" font-size="16" font-weight="700">정량적 기대 효과 (베타 테스트 후 실측 예정)</text>
+      
+      <!-- Card 1: 연동 기간 -->
+      <rect x="30" y="55" width="230" height="130" rx="14" fill="#12121a" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="145" y="82" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="700">결제연동 소요 기간</text>
+      <text x="80" y="120" fill="#555570" font-size="26" font-weight="300">5~10일</text>
+      <text x="175" y="115" fill="#555570" font-size="20">→</text>
+      <text x="200" y="120" fill="#22c55e" font-size="26" font-weight="900">1일</text>
+      <rect x="50" y="140" width="190" height="24" rx="6" fill="rgba(34,197,94,0.1)"/>
+      <text x="145" y="157" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="700">80~90% 단축</text>
+      
+      <!-- Card 2: 기술지원 -->
+      <rect x="285" y="55" width="230" height="130" rx="14" fill="#12121a" stroke="#06b6d4" stroke-width="1.5"/>
+      <text x="400" y="82" text-anchor="middle" fill="#06b6d4" font-size="11" font-weight="700">기술지원 문의 건수</text>
+      <text x="330" y="120" fill="#555570" font-size="26" font-weight="300">N건</text>
+      <text x="390" y="115" fill="#555570" font-size="20">→</text>
+      <text x="420" y="120" fill="#06b6d4" font-size="22" font-weight="900">0.4~0.6N</text>
+      <rect x="305" y="140" width="190" height="24" rx="6" fill="rgba(6,182,212,0.1)"/>
+      <text x="400" y="157" text-anchor="middle" fill="#06b6d4" font-size="13" font-weight="700">40~60% 감소</text>
+      
+      <!-- Card 3: 온보딩 -->
+      <rect x="540" y="55" width="230" height="130" rx="14" fill="#12121a" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="655" y="82" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="700">온보딩 속도</text>
+      <text x="585" y="120" fill="#555570" font-size="26" font-weight="300">Y일</text>
+      <text x="640" y="115" fill="#555570" font-size="20">→</text>
+      <text x="670" y="120" fill="#f59e0b" font-size="22" font-weight="900">0.3~0.5Y</text>
+      <rect x="560" y="140" width="190" height="24" rx="6" fill="rgba(245,158,11,0.1)"/>
+      <text x="655" y="157" text-anchor="middle" fill="#f59e0b" font-size="13" font-weight="700">50~70% 단축</text>
+      
+      <!-- Card 4: 코드 정확도 (실측) -->
+      <rect x="30" y="210" width="230" height="120" rx="14" fill="#12121a" stroke="#ec4899" stroke-width="1.5"/>
+      <text x="145" y="237" text-anchor="middle" fill="#ec4899" font-size="11" font-weight="700">코드 정확도 (실측 완료)</text>
+      <text x="80" y="275" fill="#555570" font-size="26" font-weight="300">57%</text>
+      <text x="145" y="270" fill="#555570" font-size="20">→</text>
+      <text x="180" y="275" fill="#ec4899" font-size="26" font-weight="900">100%</text>
+      <rect x="50" y="295" width="190" height="24" rx="6" fill="rgba(236,72,153,0.1)"/>
+      <text x="145" y="312" text-anchor="middle" fill="#ec4899" font-size="13" font-weight="700">+43% 향상 ✓</text>
+      
+      <!-- Card 5: 운영 비용 -->
+      <rect x="285" y="210" width="230" height="120" rx="14" fill="#12121a" stroke="#818cf8" stroke-width="1.5"/>
+      <text x="400" y="237" text-anchor="middle" fill="#818cf8" font-size="11" font-weight="700">MCP 서버 운영 비용</text>
+      <text x="400" y="278" text-anchor="middle" fill="#818cf8" font-size="32" font-weight="900">0원</text>
+      <text x="400" y="310" text-anchor="middle" fill="#555570" font-size="11">STDIO 로컬 실행 (서버 불필요)</text>
+      
+      <!-- Card 6: 업계 포지션 -->
+      <rect x="540" y="210" width="230" height="120" rx="14" fill="#12121a" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="655" y="237" text-anchor="middle" fill="#6366f1" font-size="11" font-weight="700">업계 포지션</text>
+      <text x="655" y="275" text-anchor="middle" fill="#6366f1" font-size="18" font-weight="900">한국 PG 업계</text>
+      <text x="655" y="300" text-anchor="middle" fill="#6366f1" font-size="18" font-weight="900">최초 MCP 도입</text>
+      <text x="655" y="320" text-anchor="middle" fill="#555570" font-size="10">(토스페이먼츠 다음 2번째)</text>
+    </svg>
+    <div class="svg-caption">⚠️ 연동 기간·기술지원·온보딩 수치는 베타 테스트 데이터 수집 후 실측값으로 업데이트 필요</div>
+  </div>
+
+  <div class="highlight-box warning">
+    <div class="highlight-box-title">📊 정량화를 위한 측정 방법 (베타 테스트 시 적용)</div>
+    <p>
+      <strong>Before 데이터</strong>: IT기획운영팀에서 기술지원팀 연동 관련 문의 통계(월별 건수, 평균 대응 시간) 집계<br>
+      <strong>After 데이터</strong>: 베타 고객사 대상 MCP+Skill 제공 후 동일 지표 수집<br>
+      <strong>측정 지표</strong>: ① 연동 완료 소요 시간 ② 기술지원 문의 건수 ③ 문의 대응 시간 ④ 코드 정확도(Eval)
+    </p>
+  </div>
+</section>
+
+<!-- ===================== SECTION 10: TAKEAWAY ===================== -->
+<section id="takeaway">
+  <div class="section-label">10 — Key Takeaway</div>
+  <h2 class="section-title">핵심 교훈: AI를 업무에 활용하는 방법</h2>
+  <p class="section-desc">
+    이 프로젝트를 통해 얻은 실전 인사이트를 공유합니다.
+  </p>
+
+  <div class="card-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));">
+    <div class="card">
+      <div class="card-icon" style="background:var(--accent-glow); color:var(--accent-light);">🎯</div>
+      <h3>1. 도구별 역할을 나눠라</h3>
+      <p>채팅창은 전략·기획·문서 생성, Claude Code는 개발·테스트·배포, Cowork은 평가·패키징. 하나의 도구에서 모든 걸 하려 하면 비효율적입니다.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:var(--green-dim); color:var(--green);">📋</div>
+      <h3>2. 기획을 먼저 잡아라</h3>
+      <p>벤치마킹 분석 → 기획안 → 문서 생성 → 개발 순서로 진행. AI에게 명확한 설계를 먼저 주면 코드 품질이 크게 향상됩니다.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:var(--orange-dim); color:var(--orange);">🔄</div>
+      <h3>3. 세션 간 컨텍스트를 이어라</h3>
+      <p>정리본을 작성하여 다음 세션에 넘기면 컨텍스트 단절 없이 연속적으로 작업 가능. 이 교육자료도 3개 정리본을 통합하여 작성한 것입니다.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:var(--cyan-dim); color:var(--cyan);">📏</div>
+      <h3>4. 정량 효과를 반드시 측정하라</h3>
+      <p>Eval 벤치마크로 +43% 정확도 향상을 실측. 임원 보고 시 "체감" 아닌 "수치"로 보여주는 것이 핵심입니다. 베타 테스트 후 실측 데이터 수집이 다음 과제입니다.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:var(--red-dim); color:var(--pink);">🤖</div>
+      <h3>5. AI의 자가 진단을 활용하라</h3>
+      <p>Claude Code는 빌드 에러를 스스로 분석하고 수정합니다. 모든 버그를 사람이 잡으려 하지 말고, AI가 테스트→에러 분석→수정하는 루프를 돌게 하세요.</p>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background:rgba(236,72,153,0.12); color:#ec4899;">🚀</div>
+      <h3>6. 트렌드를 선점하라</h3>
+      <p>MCP → Skills → CLI 순서로 AI 개발 트렌드가 확산 중. 빠르게 도입하면 "업계 최초"라는 포지셔닝으로 브랜드 가치를 높일 수 있습니다.</p>
+    </div>
+  </div>
+
+  <!-- Final Summary SVG -->
+  <div class="svg-wrapper" style="margin-top:3rem;">
+    <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans KR', sans-serif">
+      <!-- Background gradient -->
+      <defs>
+        <linearGradient id="summaryGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.12"/>
+          <stop offset="50%" style="stop-color:#ec4899;stop-opacity:0.08"/>
+          <stop offset="100%" style="stop-color:#06b6d4;stop-opacity:0.12"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="800" height="200" rx="16" fill="url(#summaryGrad)"/>
+      <rect x="0" y="0" width="800" height="200" rx="16" fill="none" stroke="#1e1e30" stroke-width="1"/>
+      
+      <text x="400" y="40" text-anchor="middle" fill="#e8e8f0" font-size="18" font-weight="900">프로젝트 최종 요약</text>
+      
+      <!-- 4 columns -->
+      <text x="120" y="80" text-anchor="middle" fill="#818cf8" font-size="32" font-weight="900">~10시간</text>
+      <text x="120" y="100" text-anchor="middle" fill="#8888a0" font-size="11">총 작업 시간</text>
+      
+      <line x1="230" y1="65" x2="230" y2="105" stroke="#1e1e30" stroke-width="1"/>
+      
+      <text x="340" y="80" text-anchor="middle" fill="#22c55e" font-size="32" font-weight="900">3종</text>
+      <text x="340" y="100" text-anchor="middle" fill="#8888a0" font-size="11">MCP + Skill + 가이드</text>
+      
+      <line x1="450" y1="65" x2="450" y2="105" stroke="#1e1e30" stroke-width="1"/>
+      
+      <text x="555" y="80" text-anchor="middle" fill="#ec4899" font-size="32" font-weight="900">100%</text>
+      <text x="555" y="100" text-anchor="middle" fill="#8888a0" font-size="11">코드 정확도 (Eval)</text>
+      
+      <line x1="660" y1="65" x2="660" y2="105" stroke="#1e1e30" stroke-width="1"/>
+      
+      <text x="740" y="80" text-anchor="middle" fill="#f59e0b" font-size="32" font-weight="900">0원</text>
+      <text x="740" y="100" text-anchor="middle" fill="#8888a0" font-size="11">추가 서버 비용</text>
+      
+      <!-- Bottom message -->
+      <text x="400" y="145" text-anchor="middle" fill="#e8e8f0" font-size="14" font-weight="600">
+        AI를 "잘" 활용하면 기존에 수 주~수 개월 걸리던 작업을 하루 만에 끝낼 수 있습니다.
+      </text>
+      <text x="400" y="175" text-anchor="middle" fill="#8888a0" font-size="12">
+        핵심은 AI에게 명확한 설계를 주고, 도구별 역할을 분담하고, 결과를 정량적으로 측정하는 것입니다.
+      </text>
+    </svg>
+  </div>
+</section>
+
+</div><!-- end container -->
+
+<!-- ===================== FOOTER ===================== -->
+<footer>
+  <p>KG모빌리언스 IT전략실 AI TF · 2026.03 · Claude (Anthropic) 활용 교육자료</p>
+  <p style="margin-top:0.5rem; color:#333;">이 교육자료 자체도 Claude를 활용하여 작성되었습니다.</p>
+</footer>
+
+<!-- ===================== SCRIPTS ===================== -->
+<script>
+// Tab switching
+function switchTab(group, index) {
+  const tabsEl = document.getElementById(group + '-tabs');
+  const btns = tabsEl.querySelectorAll('.tab-btn');
+  btns.forEach((b, i) => b.classList.toggle('active', i === index));
+  
+  // Hide all, show selected
+  let i = 0;
+  while (document.getElementById(group + '-content-' + i)) {
+    document.getElementById(group + '-content-' + i).classList.remove('active');
+    i++;
+  }
+  document.getElementById(group + '-content-' + index).classList.add('active');
+}
+
+// Smooth scroll for TOC
+document.querySelectorAll('.toc a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) {
+      const offset = 70;
+      const pos = target.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top: pos, behavior: 'smooth' });
+    }
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "name": "@mobilpay/mcp-server",
+  "version": "2.0.1",
+  "description": "KG파이낸셜 결제서비스(MOBILPAY + 내죠여왕) 연동을 위한 MCP 서버",
+  "type": "module",
+  "bin": {
+    "mobilpay-mcp-server": "dist/index.js"
+  },
+  "files": [
+    "dist/",
+    "!dist/**/*.test.*",
+    "md/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:unit": "vitest run src/search src/chunker src/utils",
+    "test:handlers": "vitest run src/tool src/indexer/doc-registry.test.ts",
+    "test:e2e": "vitest run src/e2e",
+    "test:scenarios": "vitest run src/scenarios",
+    "test:qa": "vitest run src/tool src/indexer/doc-registry.test.ts src/e2e src/scenarios",
+    "test:qa:verbose": "vitest run src/tool src/indexer/doc-registry.test.ts src/e2e src/scenarios --reporter=verbose",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["mobilpay", "nezo", "mcp", "payment", "kg파이낸셜", "내죠여왕", "알림톡결제"],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.4",
+    "unified": "^11.0.5",
+    "remark-parse": "^11.0.0",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "tsx": "^4.19.4",
+    "vitest": "^3.1.1",
+    "@types/node": "^22.15.3"
+  }
+}

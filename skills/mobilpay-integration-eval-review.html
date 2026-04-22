@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "mobilpay-integration", "runs": [{"id": "eval-1-creditcard-nodejs-with_skill", "prompt": "MOBILPAY\ub85c Node.js/Express \uae30\ubc18 \uc2e0\uc6a9\uce74\ub4dc \uacb0\uc81c\ub97c \uc5f0\ub3d9\ud558\ub824\uace0 \ud569\ub2c8\ub2e4. \uac70\ub798\ub4f1\ub85d API \ud638\ucd9c\ubd80\ud130 \uacb0\uc81c \uc644\ub8cc \ud6c4 noti_url\ub85c \uacb0\uacfc\ub97c \uc218\uc2e0\ud558\ub294 \uac83\uae4c\uc9c0 \uc804\uccb4 \ucf54\ub4dc\ub97c \uc791\uc131\ud574\uc8fc\uc138\uc694. \ud14c\uc2a4\ud2b8 \ud658\uacbd \uae30\uc900\uc785\ub2c8\ub2e4.", "eval_id": 1, "outputs": [{"name": "payment-server.js", "type": "text", "content": "const express = require('express');\nconst crypto = require('crypto');\nconst axios = require('axios');\nrequire('dotenv').config();\n\nconst app = express();\n\n// ============================================================================\n// \ud658\uacbd \uc124\uc815 \ubc0f \ubcf4\uc548 \uac80\uc99d\n// ============================================================================\n\n// skey\ub294 \ubc18\ub4dc\uc2dc \ud658\uacbd\ubcc0\uc218\uc5d0\uc11c \ub85c\ub4dc (\ud558\ub4dc\ucf54\ub529 \uc808\ub300 \uae08\uc9c0)\nconst SKEY = process.env.MOBILPAY_SKEY;\nif (!SKEY) {\n  console.error('ERROR: MOBILPAY_SKEY \ud658\uacbd\ubcc0\uc218\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.');\n  process.exit(1);\n}\n\n// \uac00\ub9f9\uc810 \uc815\ubcf4\nconst SID = process.env.MOBILPAY_SID || '000730010001'; // \ud14c\uc2a4\ud2b8\uc6a9 \uae30\ubcf8\uac12\nconst SITE_URL = process.env.SITE_URL || 'http://localhost:3000';\nconst OK_URL = process.env.OK_URL || `${SITE_URL}/payment/result`;\nconst NOTI_URL = process.env.NOTI_URL || `${SITE_URL}/payment/noti`;\nconst FAIL_URL = process.env.FAIL_URL || `${SITE_URL}/payment/fail`;\n\n// \ud14c\uc2a4\ud2b8/\uc6b4\uc601 \ud658\uacbd \ubd84\uae30\nconst IS_TEST_ENV = process.env.NODE_ENV !== 'production';\nconst API_HOST = IS_TEST_ENV\n  ? 'https://test.mobilians.co.kr'\n  : 'https://mup.mobilians.co.kr';\n\nconst REGISTRATION_API = `${API_HOST}/MUP/api/registration`;\nconst APPROVAL_API = `${API_HOST}/MUP/api/approval`;\n\n// KG\ubaa8\ube4c\ub9ac\uc5b8\uc2a4 \uacb0\uc81c\uc11c\ubc84 IP \ud654\uc774\ud2b8\ub9ac\uc2a4\ud2b8 (noti_url IP \uac80\uc99d\uc6a9)\nconst ALLOWED_NOTI_IPS = [\n  '175.158.12.1',    // \uba54\uc778 NOTI \uc11c\ubc84\n  '175.158.12.2',    // \ud14c\uc2a4\ud2b8 NOTI \uc11c\ubc84\n  '116.127.121.132'  // \ubc31\uc5c5 NOTI \uc11c\ubc84\n];\n\n// ============================================================================\n// Express \ubbf8\ub4e4\uc6e8\uc5b4 \uc124\uc815\n// ============================================================================\n\n// URL-encoded \ud3fc \ub370\uc774\ud130 \ud30c\uc2f1 (euc-kr \uc778\ucf54\ub529 \uc8fc\uc758)\napp.use(express.urlencoded({ extended: true }));\napp.use(express.json());\n\n// \uac04\ub2e8\ud55c \uc778\uba54\ubaa8\ub9ac \uc800\uc7a5\uc18c (\uc2e4\uc81c\uc6b4\uc601: DB \uc0ac\uc6a9)\nconst processingStore = {\n  // trade_id: { amount, timestamp, processed: boolean }\n};\n\n// ============================================================================\n// \uc720\ud2f8\ub9ac\ud2f0 \ud568\uc218\n// ============================================================================\n\n/**\n * HMAC-SHA256 \uacc4\uc0b0\n * @param {string} message - \uba54\uc2dc\uc9c0\n * @returns {string} Base64 \uc778\ucf54\ub529\ub41c HMAC\n */\nfunction calculateHmac(message) {\n  return crypto.createHmac('sha256', SKEY)\n    .update(message, 'utf8')\n    .digest('base64');\n}\n\n/**\n * HMAC \uac80\uc99d (\uac70\ub798\ub4f1\ub85d/\uc778\uc99d/\uc2b9\uc778/\uacb0\uc81c \uc751\ub2f5)\n * @param {string} amount - \ucd1d \uacb0\uc81c \uae08\uc561\n * @param {string} okUrl - ok_url\n * @param {string} tradeId - \uac70\ub798\ubc88\ud638\n * @param {string} timeStamp - \ud0c0\uc784\uc2a4\ud0d0\ud504\n * @param {string} receivedHmac - \uc218\uc2e0\ud55c HMAC\n * @returns {boolean} \uac80\uc99d \uc131\uacf5 \uc5ec\ubd80\n */\nfunction verifyResponseHmac(amount, okUrl, tradeId, timeStamp, receivedHmac) {\n  const message = String(amount) + okUrl + tradeId + timeStamp;\n  const calculatedHmac = calculateHmac(message);\n  return calculatedHmac === receivedHmac;\n}\n\n/**\n * \ud074\ub77c\uc774\uc5b8\ud2b8 IP \ucd94\ucd9c (\ud504\ub85d\uc2dc \ub300\uc751)\n * @param {Object} req - Express request\n * @returns {string} IP \uc8fc\uc18c\n */\nfunction getClientIp(req) {\n  return (\n    req.headers['x-forwarded-for']?.split(',')[0].trim() ||\n    req.socket.remoteAddress ||\n    req.ip ||\n    ''\n  ).replace('::ffff:', '');\n}\n\n/**\n * \uace0\uc720\ud55c \uac70\ub798\ubc88\ud638 \uc0dd\uc131\n * @returns {string} \uac70\ub798\ubc88\ud638\n */\nfunction generateTradeId() {\n  const timestamp = Date.now();\n  const random = Math.random().toString(36).substring(2, 8);\n  return `ORDER_${timestamp}_${random}`;\n}\n\n/**\n * ISO 8601 \ud615\uc2dd\uc758 \ud604\uc7ac \uc2dc\uac04 \ubc18\ud658\n * @returns {string} ISO \uc2dc\uac04 \ubb38\uc790\uc5f4\n */\nfunction getCurrentTimestamp() {\n  const now = new Date();\n  return now.toISOString().replace(/[-T:.Z]/g, '').substring(0, 14);\n}\n\n/**\n * \uacb0\uc81c \uc815\ubcf4 \uc800\uc7a5 (DB \ub300\uc2e0 \uc778\uba54\ubaa8\ub9ac \uc800\uc7a5\uc18c \uc0ac\uc6a9 - \uc2e4\uc81c\uc6b4\uc601\uc740 DB \ud544\uc218)\n * @param {string} tradeId - \uac70\ub798\ubc88\ud638\n * @param {number} amount - \uae08\uc561\n * @param {string} timeStamp - \ud0c0\uc784\uc2a4\ud0d0\ud504\n */\nfunction savePaymentInfo(tradeId, amount, timeStamp) {\n  processingStore[tradeId] = {\n    amount: Number(amount),\n    timeStamp,\n    createdAt: new Date(),\n    processed: false\n  };\n}\n\n/**\n * \uc800\uc7a5\ub41c \uacb0\uc81c \uc815\ubcf4 \uc870\ud68c\n * @param {string} tradeId - \uac70\ub798\ubc88\ud638\n * @returns {Object|null} \uacb0\uc81c \uc815\ubcf4\n */\nfunction getPaymentInfo(tradeId) {\n  return processingStore[tradeId] || null;\n}\n\n/**\n * \uac70\ub798\uac00 \uc774\ubbf8 \ucc98\ub9ac\ub418\uc5c8\ub294\uc9c0 \ud655\uc778 (\uc911\ubcf5 \ubc29\uc5b4)\n * @param {string} tradeId - \uac70\ub798\ubc88\ud638\n * @returns {boolean} \ucc98\ub9ac \uc644\ub8cc \uc5ec\ubd80\n */\nfunction isAlreadyProcessed(tradeId) {\n  const info = processingStore[tradeId];\n  return info && info.processed === true;\n}\n\n/**\n * \uac70\ub798\ub97c \ucc98\ub9ac \uc644\ub8cc\ub85c \ud45c\uc2dc (\uc911\ubcf5 \ubc29\uc5b4)\n * @param {string} tradeId - \uac70\ub798\ubc88\ud638\n */\nfunction markAsProcessed(tradeId) {\n  if (processingStore[tradeId]) {\n    processingStore[tradeId].processed = true;\n    processingStore[tradeId].processedAt = new Date();\n  }\n}\n\n/**\n * \uac70\ub798 \uc2b9\uc778 API \ud638\ucd9c (\ubc31\uc5d4\ub4dc\uc5d0\uc11c\ub9cc \ud638\ucd9c)\n * @param {string} tid - \uac70\ub798 ID\n * @param {string} payToken - \uacb0\uc81c \ud1a0\ud070\n * @param {number} amount - \uacb0\uc81c \uae08\uc561\n * @returns {Promise<Object>} API \uc751\ub2f5\n */\nasync function callApprovalApi(tid, payToken, amount) {\n  const approvalPayload = {\n    sid: SID,\n    tid,\n    pay_token: payToken,\n    amount: {\n      total: amount\n    }\n  };\n\n  try {\n    const response = await axios.post(APPROVAL_API, approvalPayload, {\n      headers: { 'Content-Type': 'application/json' },\n      timeout: 10000\n    });\n    return response.data;\n  } catch (error) {\n    console.error('\uacb0\uc81c \uc2b9\uc778 API \ud638\ucd9c \uc2e4\ud328:', error.message);\n    throw new Error(`\uacb0\uc81c \uc2b9\uc778 \uc2e4\ud328: ${error.message}`);\n  }\n}\n\n// ============================================================================\n// \ub77c\uc6b0\ud130: \uacb0\uc81c \ud398\uc774\uc9c0 \uc81c\uacf5 (\ud3fc \uc791\uc131)\n// ============================================================================\n\n/**\n * GET /payment/form\n * \uacb0\uc81c \ud3fc \ud398\uc774\uc9c0 \uc81c\uacf5 (\uc0ac\uc6a9\uc790\uac00 \uacb0\uc81c \uc694\uccad\uc744 \uc2dc\uc791\ud558\ub294 \ud398\uc774\uc9c0)\n */\napp.get('/payment/form', (req, res) => {\n  res.send(`\n    <!DOCTYPE html>\n    <html>\n    <head>\n      <meta charset=\"utf-8\">\n      <title>MOBILPAY \uc2e0\uc6a9\uce74\ub4dc \uacb0\uc81c</title>\n      <style>\n        body { font-family: Arial, sans-serif; margin: 40px; }\n        .form-group { margin: 15px 0; }\n        label { display: block; font-weight: bold; margin-bottom: 5px; }\n        input { padding: 8px; width: 300px; }\n        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }\n        button:hover { background: #0056b3; }\n        .info { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }\n      </style>\n    </head>\n    <body>\n      <h1>MOBILPAY \uc2e0\uc6a9\uce74\ub4dc \uacb0\uc81c</h1>\n      <form method=\"POST\" action=\"/payment/register\">\n        <div class=\"form-group\">\n          <label>\uc0c1\ud488\uba85:</label>\n          <input type=\"text\" name=\"product_name\" value=\"\ud14c\uc2a4\ud2b8 \uc2e0\uc6a9\uce74\ub4dc \uacb0\uc81c\" required>\n        </div>\n        <div class=\"form-group\">\n          <label>\uacb0\uc81c \uae08\uc561 (\uc6d0):</label>\n          <input type=\"number\" name=\"amount\" value=\"10000\" min=\"1000\" required>\n        </div>\n        <div class=\"form-group\">\n          <label>\uc0ac\uc6a9\uc790 \uc774\ub984:</label>\n          <input type=\"text\" name=\"user_name\" value=\"\ud64d\uae38\ub3d9\">\n        </div>\n        <div class=\"form-group\">\n          <label>\uc0ac\uc6a9\uc790 \uc774\uba54\uc77c:</label>\n          <input type=\"email\" name=\"user_email\" value=\"test@example.com\">\n        </div>\n        <div class=\"info\">\n          <strong>\uc8fc\uc758:</strong> \uc2e0\uc6a9\uce74\ub4dc \uc11c\ube44\uc2a4\ub294 \ud14c\uc2a4\ud2b8\uc11c\ubc84\ub97c \uc81c\uacf5\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.\n          \ud604\uc7ac \ud658\uacbd: <strong>${IS_TEST_ENV ? '\ud14c\uc2a4\ud2b8 (test.mobilians.co.kr)' : '\uc6b4\uc601 (mup.mobilians.co.kr)'}</strong>\n        </div>\n        <button type=\"submit\">\uacb0\uc81c \uc9c4\ud589</button>\n      </form>\n    </body>\n    </html>\n  `);\n});\n\n// ============================================================================\n// \ub77c\uc6b0\ud130: \uac70\ub798 \ub4f1\ub85d API \ud638\ucd9c\n// ============================================================================\n\n/**\n * POST /payment/register\n * 1. \uc0ac\uc6a9\uc790 \ud3fc \uc81c\ucd9c \ubc1b\uc74c\n * 2. MOBILPAY \uac70\ub798\ub4f1\ub85d API \ud638\ucd9c\n * 3. \uc751\ub2f5\uc5d0\uc11c pay_url \ubc1b\uc74c\n * 4. \uacb0\uc81c\ucc3d \ud31d\uc5c5 \ub610\ub294 \ub9ac\ub2e4\uc774\ub809\ud2b8 \uc9c4\ud589\n */\napp.post('/payment/register', async (req, res) => {\n  try {\n    const { product_name, amount, user_name, user_email } = req.body;\n\n    // \uc785\ub825\uac12 \uac80\uc99d\n    if (!product_name || !amount) {\n      return res.status(400).send('\ud544\uc218 \ud56d\ubaa9\uc774 \ub204\ub77d\ub418\uc5c8\uc2b5\ub2c8\ub2e4.');\n    }\n\n    const numAmount = Number(amount);\n    if (isNaN(numAmount) || numAmount < 1000) {\n      return res.status(400).send('\uacb0\uc81c \uae08\uc561\uc740 1000\uc6d0 \uc774\uc0c1\uc774\uc5b4\uc57c \ud569\ub2c8\ub2e4.');\n    }\n\n    // \uace0\uc720\ud55c \uac70\ub798\ubc88\ud638 \uc0dd\uc131\n    const tradeId = generateTradeId();\n    const timeStamp = getCurrentTimestamp();\n\n    // \uac70\ub798 \uc815\ubcf4 \uc800\uc7a5 (\ud6c4\ucc98\ub9ac\uc5d0\uc11c \uac80\uc99d\uc6a9)\n    savePaymentInfo(tradeId, numAmount, timeStamp);\n\n    // HMAC \uacc4\uc0b0\n    const hmacMessage = String(numAmount) + OK_URL + tradeId + timeStamp;\n    const hmac = calculateHmac(hmacMessage);\n\n    // \uac70\ub798\ub4f1\ub85d API \uc694\uccad \ud398\uc774\ub85c\ub4dc \uad6c\uc131\n    const registrationPayload = {\n      sid: SID,\n      cash_code: 'CN', // \uc2e0\uc6a9\uce74\ub4dc\n      product_name,\n      trade_id: tradeId,\n      site_url: SITE_URL,\n      ok_url: OK_URL,\n      noti_url: NOTI_URL,\n      fail_url: FAIL_URL,\n      amount: {\n        total: numAmount\n      },\n      user_name: user_name || undefined,\n      user_email: user_email || undefined,\n      time_stamp: timeStamp,\n      call_type: 'P', // \ud31d\uc5c5 \ubc29\uc2dd\n      hybrid_pay: 'N' // \uc77c\ubc18\uacb0\uc81c (\uc778\uc99d+\uc2b9\uc778 \ub3d9\uc2dc)\n      // \uc2e0\uc6a9\uce74\ub4dc \uc635\uc158 (\ud544\uc694\uc2dc \ucd94\uac00)\n      // pay_options: {\n      //   cn_installment: '00' // \uc77c\uc2dc\ubd88\n      // }\n    };\n\n    console.log('[\uac70\ub798\ub4f1\ub85d \uc694\uccad]', {\n      tradeId,\n      amount: numAmount,\n      url: REGISTRATION_API,\n      timeStamp\n    });\n\n    // MOBILPAY \uac70\ub798\ub4f1\ub85d API \ud638\ucd9c\n    const response = await axios.post(REGISTRATION_API, registrationPayload, {\n      headers: { 'Content-Type': 'application/json' },\n      timeout: 10000\n    });\n\n    const { code, message, pay_url, tid, hmac: responseHmac } = response.data;\n\n    // \uc751\ub2f5 \ucf54\ub4dc \ud655\uc778\n    if (code !== '0000') {\n      console.error('[\uac70\ub798\ub4f1\ub85d \uc2e4\ud328]', { code, message });\n      return res.status(400).send(`\uac70\ub798\ub4f1\ub85d \uc2e4\ud328: ${message}`);\n    }\n\n    // \uc751\ub2f5 HMAC \uac80\uc99d (\uc120\ud0dd\uc0ac\ud56d: \ub370\uc774\ud130 \ubb34\uacb0\uc131 \ud655\uc778)\n    if (responseHmac) {\n      const isValidHmac = verifyResponseHmac(\n        numAmount,\n        OK_URL,\n        tradeId,\n        timeStamp,\n        responseHmac\n      );\n      if (!isValidHmac) {\n        console.error('[HMAC \uac80\uc99d \uc2e4\ud328]', { expected: hmac, received: responseHmac });\n        return res.status(400).send('HMAC \uac80\uc99d \uc2e4\ud328: \ub370\uc774\ud130\uac00 \ubcc0\uc870\ub418\uc5c8\uc2b5\ub2c8\ub2e4.');\n      }\n    }\n\n    console.log('[\uac70\ub798\ub4f1\ub85d \uc131\uacf5]', { tid, tradeId, pay_url });\n\n    // \uac70\ub798 TID \uc800\uc7a5\n    if (processingStore[tradeId]) {\n      processingStore[tradeId].tid = tid;\n    }\n\n    // \uacb0\uc81c\ucc3d \ud31d\uc5c5\uc744 \uc704\ud55c HTML \uc751\ub2f5\n    res.send(`\n      <!DOCTYPE html>\n      <html>\n      <head>\n        <meta charset=\"utf-8\">\n        <title>MOBILPAY \uacb0\uc81c\ucc3d</title>\n      </head>\n      <body onload=\"openPaymentWindow()\">\n        <h2>\uacb0\uc81c\ub97c \uc9c4\ud589\ud569\ub2c8\ub2e4...</h2>\n        <p>\uacb0\uc81c\ucc3d\uc774 \uc5f4\ub9ac\uc9c0 \uc54a\uc73c\uba74 \uc544\ub798 \ubc84\ud2bc\uc744 \ud074\ub9ad\ud558\uc138\uc694.</p>\n        <button onclick=\"openPaymentWindow()\">\uacb0\uc81c\ucc3d \uc5f4\uae30</button>\n        <button onclick=\"goBack()\">\ucde8\uc18c</button>\n\n        <script>\n          function openPaymentWindow() {\n            const payUrl = '${pay_url}';\n            const width = 820;\n            const height = 600;\n            const left = (screen.width - width) / 2;\n            const top = (screen.height - height) / 2;\n            window.open(payUrl, 'payment',\n              'width=' + width + ',height=' + height + ',left=' + left + ',top=' + top);\n          }\n          function goBack() {\n            window.location.href = '/payment/form';\n          }\n        </script>\n      </body>\n      </html>\n    `);\n\n  } catch (error) {\n    console.error('[\uac70\ub798\ub4f1\ub85d \uc5d0\ub7ec]', error.message);\n    res.status(500).send(`\uc5d0\ub7ec \ubc1c\uc0dd: ${error.message}`);\n  }\n});\n\n// ============================================================================\n// \ub77c\uc6b0\ud130: \uacb0\uc81c \uacb0\uacfc \uc218\uc2e0 (ok_url - \uc0ac\uc6a9\uc790 \ube0c\ub77c\uc6b0\uc800)\n// ============================================================================\n\n/**\n * POST /payment/result\n * - \uc0ac\uc6a9\uc790\uac00 \uacb0\uc81c\ucc3d\uc5d0\uc11c \uacb0\uc81c \uc644\ub8cc \ud6c4 \ud638\ucd9c\ub428\n * - \uacb0\uc81c \uc131\uacf5/\uc2e4\ud328 \uacb0\uacfc\ub97c \ud654\uba74\uc5d0 \ud45c\uc2dc\n * - \ubcf4\uc548 \uac80\uc99d \ud544\uc218 (\uae08\uc561, HMAC, \uc911\ubcf5 \ud655\uc778)\n */\napp.post('/payment/result', (req, res) => {\n  try {\n    console.log('[ok_url \uc218\uc2e0]', { trade_id: req.body.trade_id });\n\n    const {\n      code,\n      message,\n      sid,\n      tid,\n      trade_id,\n      cash_code,\n      pay_token,\n      amount,\n      hmac: receivedHmac,\n      cn_card_name,\n      cn_installment,\n      cn_appr_no\n    } = req.body;\n\n    // 1. \uc751\ub2f5 \ucf54\ub4dc \ud655\uc778\n    if (code !== '0000') {\n      console.warn('[\uacb0\uc81c \uc2e4\ud328]', { code, message, trade_id });\n      return res.send(`\n        <html>\n        <head><meta charset=\"utf-8\"></head>\n        <body>\n          <h2>\uacb0\uc81c \uc2e4\ud328</h2>\n          <p>\ucf54\ub4dc: ${code}</p>\n          <p>\uba54\uc2dc\uc9c0: ${message}</p>\n          <a href=\"/payment/form\">\ucc98\uc74c\uc73c\ub85c</a>\n        </body>\n        </html>\n      `);\n    }\n\n    // 2. \uc800\uc7a5\ub41c \uac70\ub798 \uc815\ubcf4 \uc870\ud68c\n    const paymentInfo = getPaymentInfo(trade_id);\n    if (!paymentInfo) {\n      console.error('[\uac70\ub798 \uc815\ubcf4 \ubbf8\uc874\uc7ac]', { trade_id });\n      return res.send(`\n        <html>\n        <head><meta charset=\"utf-8\"></head>\n        <body>\n          <h2>\uc624\ub958</h2>\n          <p>\ud574\ub2f9 \uac70\ub798 \uc815\ubcf4\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.</p>\n          <a href=\"/payment/form\">\ucc98\uc74c\uc73c\ub85c</a>\n        </body>\n        </html>\n      `);\n    }\n\n    // 3. \uae08\uc561 \uac80\uc99d (\uc911\uc694: \uc694\uccad \uae08\uc561 vs \uc751\ub2f5 \uae08\uc561)\n    if (String(paymentInfo.amount) !== String(amount)) {\n      console.error('[\uae08\uc561 \ubd88\uc77c\uce58]', {\n        expected: paymentInfo.amount,\n        received: amount\n      });\n      return res.send(`\n        <html>\n        <head><meta charset=\"utf-8\"></head>\n        <body>\n          <h2>\uc624\ub958</h2>\n          <p>\uacb0\uc81c \uae08\uc561\uc774 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.</p>\n          <a href=\"/payment/form\">\ucc98\uc74c\uc73c\ub85c</a>\n        </body>\n        </html>\n      `);\n    }\n\n    // 4. HMAC \uac80\uc99d (\ubb34\uacb0\uc131 \ud655\uc778)\n    const isValidHmac = verifyResponseHmac(\n      amount,\n      OK_URL,\n      trade_id,\n      paymentInfo.timeStamp,\n      receivedHmac\n    );\n    if (!isValidHmac) {\n      console.error('[HMAC \uac80\uc99d \uc2e4\ud328]', { trade_id });\n      return res.send(`\n        <html>\n        <head><meta charset=\"utf-8\"></head>\n        <body>\n          <h2>\uc624\ub958</h2>\n          <p>\ub370\uc774\ud130 \ubb34\uacb0\uc131 \uac80\uc99d \uc2e4\ud328</p>\n          <a href=\"/payment/form\">\ucc98\uc74c\uc73c\ub85c</a>\n        </body>\n        </html>\n      `);\n    }\n\n    // 5. \uc911\ubcf5 \uac70\ub798 \ud655\uc778\n    if (isAlreadyProcessed(trade_id)) {\n      console.warn('[\uc911\ubcf5 \uac70\ub798]', { trade_id });\n      return res.send(`\n        <html>\n        <head><meta charset=\"utf-8\"></head>\n        <body>\n          <h2>\uacb0\uc81c \uc644\ub8cc</h2>\n          <p>\uc774\ubbf8 \ucc98\ub9ac\ub41c \uac70\ub798\uc785\ub2c8\ub2e4.</p>\n          <p>\uac70\ub798\ubc88\ud638: ${trade_id}</p>\n          <p>\uce74\ub4dc: ${cn_card_name}</p>\n          <p>\uae08\uc561: ${amount}\uc6d0</p>\n          <a href=\"/payment/form\">\ucc98\uc74c\uc73c\ub85c</a>\n        </body>\n        </html>\n      `);\n    }\n\n    // 6. \uacb0\uc81c \uc131\uacf5 \ucc98\ub9ac (DB \uc800\uc7a5, \uc11c\ube44\uc2a4 \uc81c\uacf5 \ub4f1)\n    console.log('[\uacb0\uc81c \uc131\uacf5 \ucc98\ub9ac]', {\n      trade_id,\n      tid,\n      amount,\n      card: cn_card_name,\n      appr_no: cn_appr_no\n    });\n\n    // \uc2e4\uc81c \uc6b4\uc601: \uc5ec\uae30\uc11c DB\uc5d0 \uc8fc\ubb38 \uc644\ub8cc \uc800\uc7a5, \uc0c1\ud488 \ubc30\uc1a1/\uc11c\ube44\uc2a4 \uc81c\uacf5 \ub85c\uc9c1 \uad6c\ud604\n    markAsProcessed(trade_id);\n\n    // \uc131\uacf5 \ud398\uc774\uc9c0 \ud45c\uc2dc\n    res.send(`\n      <html>\n      <head><meta charset=\"utf-8\"></head>\n      <body>\n        <h2>\uacb0\uc81c \uc644\ub8cc</h2>\n        <p>\uacb0\uc81c\uac00 \uc131\uacf5\uc801\uc73c\ub85c \uc644\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4.</p>\n        <table border=\"1\" cellpadding=\"10\">\n          <tr><td>\uac70\ub798\ubc88\ud638</td><td>${trade_id}</td></tr>\n          <tr><td>TID</td><td>${tid}</td></tr>\n          <tr><td>\uae08\uc561</td><td>${amount}\uc6d0</td></tr>\n          <tr><td>\uce74\ub4dc\uc0ac</td><td>${cn_card_name}</td></tr>\n          <tr><td>\ud560\ubd80\uac1c\uc6d4</td><td>${cn_installment === '00' ? '\uc77c\uc2dc\ubd88' : cn_installment + '\uac1c\uc6d4'}</td></tr>\n          <tr><td>\uc2b9\uc778\ubc88\ud638</td><td>${cn_appr_no}</td></tr>\n        </table>\n        <br>\n        <a href=\"/payment/form\">\ucc98\uc74c\uc73c\ub85c</a>\n      </body>\n      </html>\n    `);\n\n  } catch (error) {\n    console.error('[ok_url \ucc98\ub9ac \uc5d0\ub7ec]', error.message);\n    res.send(`\n      <html>\n      <head><meta charset=\"utf-8\"></head>\n      <body>\n        <h2>\uc624\ub958 \ubc1c\uc0dd</h2>\n        <p>${error.message}</p>\n        <a href=\"/payment/form\">\ucc98\uc74c\uc73c\ub85c</a>\n      </body>\n      </html>\n    `);\n  }\n});\n\n// ============================================================================\n// \ub77c\uc6b0\ud130: \uacb0\uc81c \uacb0\uacfc \uc218\uc2e0 (noti_url - \ubc31\uc5d4\ub4dc \uc11c\ubc84)\n// ============================================================================\n\n/**\n * POST /payment/noti\n * - MOBILPAY \uc2dc\uc2a4\ud15c \uc11c\ubc84\uc5d0\uc11c \ud638\ucd9c (\uc0ac\uc6a9\uc790 \ube0c\ub77c\uc6b0\uc800 \uc544\ub2d8)\n * - \uacb0\uc81c \uc2b9\uc778 \uacb0\uacfc\ub97c \uc2e0\ub8b0\ud560 \uc218 \uc788\ub294 \ucc44\ub110\ub85c \uc218\uc2e0\n * - SUCCESS \ub610\ub294 FAIL\ub9cc \ucd9c\ub825 (HTML \ucf54\ub4dc \uc808\ub300 \uae08\uc9c0)\n * - \uc911\ubcf5 \ud638\ucd9c \ubc29\uc5b4 \ud544\uc218 (\ucd5c\ub300 20\ud68c\uae4c\uc9c0 \ubc18\ubcf5 \ud638\ucd9c\ub428)\n * - IP \uac80\uc99d, HMAC \uac80\uc99d, \uae08\uc561 \uac80\uc99d \ud544\uc218\n */\napp.post('/payment/noti', (req, res) => {\n  try {\n    // 1. IP \uac80\uc99d (\uc911\uc694\ud55c \ubcf4\uc548 \uac80\uc99d)\n    const clientIp = getClientIp(req);\n    console.log('[noti_url \uc218\uc2e0]', {\n      trade_id: req.body.trade_id,\n      clientIp\n    });\n\n    if (!ALLOWED_NOTI_IPS.includes(clientIp)) {\n      console.error('[\ud5c8\uc6a9\ub418\uc9c0 \uc54a\uc740 IP]', { clientIp });\n      // IP\uac00 \ubd88\uc77c\uce58\ud574\ub3c4 FAIL\uc744 \uba85\uc2dc\uc801\uc73c\ub85c \ucd9c\ub825\n      return res.send('FAIL');\n    }\n\n    const {\n      code,\n      message,\n      sid,\n      tid,\n      trade_id,\n      cash_code,\n      pay_token,\n      amount,\n      hmac: receivedHmac\n    } = req.body;\n\n    // 2. \uc751\ub2f5 \ucf54\ub4dc \ud655\uc778\n    if (code !== '0000') {\n      console.error('[\uacb0\uc81c \uc2e4\ud328 (noti)]', { code, message, trade_id });\n      return res.send('FAIL');\n    }\n\n    // 3. pay_token \uac80\uc99d (\ucd5c\ub300 15byte)\n    if (!pay_token || pay_token.length > 15) {\n      console.error('[\uc720\ud6a8\ud558\uc9c0 \uc54a\uc740 pay_token]', { pay_token });\n      return res.send('FAIL');\n    }\n\n    // 4. \uc800\uc7a5\ub41c \uac70\ub798 \uc815\ubcf4 \uc870\ud68c\n    const paymentInfo = getPaymentInfo(trade_id);\n    if (!paymentInfo) {\n      console.error('[\uac70\ub798 \uc815\ubcf4 \ubbf8\uc874\uc7ac]', { trade_id });\n      return res.send('FAIL');\n    }\n\n    // 5. \uae08\uc561 \uac80\uc99d (\uc911\uc694: \uc6d0\ub798 \uc8fc\ubb38 \uae08\uc561\uacfc \ub3d9\uc77c\ud55c\uc9c0 \ud655\uc778)\n    if (String(paymentInfo.amount) !== String(amount)) {\n      console.error('[\uae08\uc561 \ubd88\uc77c\uce58 (noti)]', {\n        expected: paymentInfo.amount,\n        received: amount\n      });\n      return res.send('FAIL');\n    }\n\n    // 6. HMAC \uac80\uc99d (\ubb34\uacb0\uc131 \ud655\uc778)\n    const isValidHmac = verifyResponseHmac(\n      amount,\n      OK_URL,\n      trade_id,\n      paymentInfo.timeStamp,\n      receivedHmac\n    );\n    if (!isValidHmac) {\n      console.error('[HMAC \uac80\uc99d \uc2e4\ud328 (noti)]', { trade_id });\n      return res.send('FAIL');\n    }\n\n    // 7. \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4 (\ud575\uc2ec!)\n    // noti_url\uc740 SUCCESS\ub97c \uc218\uc2e0\ud560 \ub54c\uae4c\uc9c0 \ucd5c\ub300 20\ud68c \ud638\ucd9c\ub420 \uc218 \uc788\uc73c\ubbc0\ub85c\n    // \uc774\ubbf8 \ucc98\ub9ac\ub41c \uac70\ub798\ub294 SUCCESS\ub9cc \ucd9c\ub825\ud558\uc5ec \ubc18\ubcf5 \ud638\ucd9c \uc911\uc9c0\n    if (isAlreadyProcessed(trade_id)) {\n      console.log('[\uc774\ubbf8 \ucc98\ub9ac\ub41c \uac70\ub798 (noti)]', { trade_id });\n      // SUCCESS \ucd9c\ub825\ud558\uc5ec \ubc18\ubcf5 \ud638\ucd9c \uc911\uc9c0\n      return res.send('SUCCESS');\n    }\n\n    // 8. \uacb0\uc81c \uc131\uacf5 \ucc98\ub9ac\n    console.log('[\uacb0\uc81c \uc131\uacf5 \ucc98\ub9ac (noti)]', {\n      trade_id,\n      tid,\n      amount,\n      pay_token\n    });\n\n    try {\n      // \uc2e4\uc81c \uc6b4\uc601: \uc5ec\uae30\uc11c DB \uc5c5\ub370\uc774\ud2b8, \uacb0\uc81c \uc774\ub825 \uc800\uc7a5, \uce90\uc2dc \ubb34\ud6a8\ud654 \ub4f1\n      // processPaymentSuccess(trade_id, tid, pay_token, amount, cash_code);\n\n      // \uc911\ubcf5 \ucc98\ub9ac \ud50c\ub798\uadf8 \uc800\uc7a5\n      markAsProcessed(trade_id);\n\n      // SUCCESS \ucd9c\ub825 (\ubb38\uc790\ub9cc, HTML \ucf54\ub4dc \uc808\ub300 \uae08\uc9c0!)\n      res.send('SUCCESS');\n\n    } catch (err) {\n      console.error('[\uacb0\uc81c \ucc98\ub9ac \uc911 \uc624\ub958]', { trade_id, error: err.message });\n      res.send('FAIL');\n    }\n\n  } catch (error) {\n    console.error('[noti_url \ucc98\ub9ac \uc5d0\ub7ec]', error.message);\n    res.send('FAIL');\n  }\n});\n\n// ============================================================================\n// \ub77c\uc6b0\ud130: \uacb0\uc81c \uc2e4\ud328 \ud398\uc774\uc9c0 (fail_url)\n// ============================================================================\n\n/**\n * POST /payment/fail\n * - \uacb0\uc81c\ucc3d\uc5d0\uc11c \uc0ac\uc6a9\uc790\uac00 \uacb0\uc81c\ub97c \ucde8\uc18c\ud558\uac70\ub098 \uc2e4\ud328\ud55c \uacbd\uc6b0 \ud638\ucd9c\n */\napp.post('/payment/fail', (req, res) => {\n  const { code, message, trade_id } = req.body;\n\n  console.warn('[\uacb0\uc81c \uc2e4\ud328]', { code, message, trade_id });\n\n  res.send(`\n    <html>\n    <head><meta charset=\"utf-8\"></head>\n    <body>\n      <h2>\uacb0\uc81c \uc2e4\ud328</h2>\n      <p>\ucf54\ub4dc: ${code}</p>\n      <p>\uba54\uc2dc\uc9c0: ${message}</p>\n      <p>\uac70\ub798\ubc88\ud638: ${trade_id}</p>\n      <a href=\"/payment/form\">\ucc98\uc74c\uc73c\ub85c</a>\n    </body>\n    </html>\n  `);\n});\n\n// ============================================================================\n// \ub77c\uc6b0\ud130: \uc0c1\ud0dc \ud655\uc778 \ubc0f \uad00\ub9ac\n// ============================================================================\n\n/**\n * GET /payment/status/:tradeId\n * \ud2b9\uc815 \uac70\ub798\uc758 \ucc98\ub9ac \uc0c1\ud0dc \ud655\uc778 (\ub514\ubc84\uae45/\ubaa8\ub2c8\ud130\ub9c1\uc6a9)\n */\napp.get('/payment/status/:tradeId', (req, res) => {\n  const { tradeId } = req.params;\n  const info = getPaymentInfo(tradeId);\n\n  if (!info) {\n    return res.json({ error: '\uac70\ub798\ub97c \ucc3e\uc744 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4.' });\n  }\n\n  res.json({\n    tradeId,\n    amount: info.amount,\n    timeStamp: info.timeStamp,\n    tid: info.tid,\n    processed: info.processed,\n    createdAt: info.createdAt,\n    processedAt: info.processedAt\n  });\n});\n\n/**\n * GET /health\n * \ud5ec\uc2a4 \uccb4\ud06c\n */\napp.get('/health', (req, res) => {\n  res.json({\n    status: 'ok',\n    environment: IS_TEST_ENV ? 'test' : 'production',\n    host: API_HOST\n  });\n});\n\n// ============================================================================\n// \uc5d0\ub7ec \ud578\ub4e4\ub9c1 \ubc0f \uc11c\ubc84 \uc2dc\uc791\n// ============================================================================\n\napp.use((error, req, res, next) => {\n  console.error('[\uc608\uc0c1\uce58 \ubabb\ud55c \uc5d0\ub7ec]', error);\n  res.status(500).send('\uc11c\ubc84 \uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc2b5\ub2c8\ub2e4.');\n});\n\nconst PORT = process.env.PORT || 3000;\napp.listen(PORT, () => {\n  console.log(`\n\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557\n\u2551   MOBILPAY \uc2e0\uc6a9\uce74\ub4dc \uacb0\uc81c \uc5f0\ub3d9 \uc11c\ubc84 \uc2dc\uc791                       \u2551\n\u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563\n\u2551 \ud3ec\ud2b8: ${PORT}                                                \u2551\n\u2551 \ud658\uacbd: ${IS_TEST_ENV ? '\ud14c\uc2a4\ud2b8 (test.mobilians.co.kr)' : '\uc6b4\uc601 (mup.mobilians.co.kr)'}                  \u2551\n\u2551 SID: ${SID}                                       \u2551\n\u2551 OK URL: ${OK_URL}                               \u2551\n\u2551 NOTI URL: ${NOTI_URL}                             \u2551\n\u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563\n\u2551 \uc811\uc18d: http://localhost:${PORT}/payment/form              \u2551\n\u255a\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255d\n  `);\n\n  if (!IS_TEST_ENV) {\n    console.warn('\u26a0\ufe0f  \uc6b4\uc601 \ud658\uacbd\uc785\ub2c8\ub2e4. skey\uc640 SID\uac00 \uc815\ud655\ud788 \uc124\uc815\ub418\uc5c8\ub294\uc9c0 \ud655\uc778\ud558\uc138\uc694.');\n  }\n});\n\nmodule.exports = app;\n"}], "grading": {"expectations": [{"text": "skey\ub294 \ud658\uacbd\ubcc0\uc218(process.env)\uc5d0\uc11c \ub85c\ub4dc\ud558\uace0 \ud558\ub4dc\ucf54\ub529\ud558\uc9c0 \uc54a\uc74c", "passed": true, "evidence": "Line 13: const SKEY = process.env.MOBILPAY_SKEY; with validation check and error handling (lines 14-17)"}, {"text": "HMAC-SHA256 \uac80\uc99d \ub85c\uc9c1\uc774 \uc11c\ubc84\uc0ac\uc774\ub4dc\uc5d0 \uad6c\ud604\ub418\uc5b4 \uc788\uc74c", "passed": true, "evidence": "Lines 64-83: calculateHmac() and verifyResponseHmac() functions implemented with crypto.createHmac('sha256', SKEY)"}, {"text": "noti_url \ud578\ub4e4\ub7ec\uc5d0 \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4(\uba71\ub4f1\uc131) \ub85c\uc9c1\uc774 \uad6c\ud604\ub418\uc5b4 \uc788\uc74c", "passed": true, "evidence": "Lines 635-642: isAlreadyProcessed() check and markAsProcessed() called. Lines 638-641: if already processed, return SUCCESS to stop retries"}, {"text": "noti_url \uc751\ub2f5\uc774 HTML \uc5c6\uc774 SUCCESS/FAIL \ubb38\uc790\uc5f4\ub9cc \ucd9c\ub825\ud568", "passed": true, "evidence": "Lines 660, 664, 669: res.send('SUCCESS') and res.send('FAIL') with no HTML tags"}, {"text": "\uac70\ub798\ub4f1\ub85d API \uc5d4\ub4dc\ud3ec\uc778\ud2b8\uac00 /MUP/api/registration \uc73c\ub85c \uc815\ud655\ud568", "passed": true, "evidence": "Line 32: const REGISTRATION_API = `${API_HOST}/MUP/api/registration`; and used in line 315"}, {"text": "\ud14c\uc2a4\ud2b8 \ud638\uc2a4\ud2b8\uac00 test.mobilians.co.kr \ub85c \uc124\uc815\ub428", "passed": true, "evidence": "Lines 27-30: IS_TEST_ENV check with API_HOST set to 'https://test.mobilians.co.kr' for test environment"}, {"text": "cash_code\uac00 CN(\uc2e0\uc6a9\uce74\ub4dc)\uc73c\ub85c \uc124\uc815\ub428", "passed": true, "evidence": "Line 286: cash_code: 'CN', // \uc2e0\uc6a9\uce74\ub4dc"}, {"text": "\uae08\uc561 \uac80\uc99d \ub85c\uc9c1\uc774 \ud3ec\ud568\ub428 (\uc694\uccad \uae08\uc561 vs \uc751\ub2f5 \uae08\uc561)", "passed": true, "evidence": "Lines 449-465 in ok_url handler and lines 613-620 in noti_url handler: if (String(paymentInfo.amount) !== String(amount)) with error handling"}]}}, {"id": "eval-1-creditcard-nodejs-without_skill", "prompt": "MOBILPAY\ub85c Node.js/Express \uae30\ubc18 \uc2e0\uc6a9\uce74\ub4dc \uacb0\uc81c\ub97c \uc5f0\ub3d9\ud558\ub824\uace0 \ud569\ub2c8\ub2e4. \uac70\ub798\ub4f1\ub85d API \ud638\ucd9c\ubd80\ud130 \uacb0\uc81c \uc644\ub8cc \ud6c4 noti_url\ub85c \uacb0\uacfc\ub97c \uc218\uc2e0\ud558\ub294 \uac83\uae4c\uc9c0 \uc804\uccb4 \ucf54\ub4dc\ub97c \uc791\uc131\ud574\uc8fc\uc138\uc694. \ud14c\uc2a4\ud2b8 \ud658\uacbd \uae30\uc900\uc785\ub2c8\ub2e4.", "eval_id": 1, "outputs": [{"name": "payment-server.js", "type": "text", "content": "/**\n * MOBILPAY (KG\ubaa8\ube4c\ub9ac\uc5b8\uc2a4) Node.js/Express \uc2e0\uc6a9\uce74\ub4dc \uacb0\uc81c \uc5f0\ub3d9\n * \uac70\ub798\ub4f1\ub85d \u2192 \uacb0\uc81c\ucc3d \u2192 \uc778\uc99d/\uc2b9\uc778 \u2192 noti_url \uacb0\uacfc \uc218\uc2e0 \uc804\uccb4 \ud50c\ub85c\uc6b0\n * \ud14c\uc2a4\ud2b8 \ud658\uacbd \uae30\uc900\n */\n\nconst express = require('express');\nconst https = require('https');\nconst crypto = require('crypto');\nconst uuid = require('uuid');\nrequire('dotenv').config();\n\nconst app = express();\napp.use(express.json());\napp.use(express.urlencoded({ extended: true }));\n\n// ============================================================================\n// \uc124\uc815\uac12\n// ============================================================================\n\nconst MOBILPAY_CONFIG = {\n  // \ud14c\uc2a4\ud2b8 \ud658\uacbd\n  test_host: 'test.mobilians.co.kr',\n  // \ud504\ub85c\ub355\uc158: 'mup.mobilians.co.kr'\n\n  // \uc11c\ube44\uc2a4 \ud0a4 (\ud658\uacbd \ubcc0\uc218\uc5d0\uc11c \ub85c\ub4dc - \ud074\ub77c\uc774\uc5b8\ud2b8 \uc0ac\uc774\ub4dc\uc5d0 \ub178\ucd9c \uae08\uc9c0)\n  skey: process.env.MOBILPAY_SKEY || 'test_skey_xxxxx',\n\n  // \uac00\ub9f9\uc810 \uc815\ubcf4\n  mid: process.env.MOBILPAY_MID || 'test_mid_xxxxx',\n  mname: '\ud14c\uc2a4\ud2b8 \uac00\ub9f9\uc810',\n\n  // \ucf5c\ubc31 URL (\uc11c\ubc84 \uae30\uc900 noti_url)\n  noti_url: process.env.NOTI_URL || 'https://your-domain.com/api/payment/notify',\n};\n\n// ============================================================================\n// \uc720\ud2f8\ub9ac\ud2f0 \ud568\uc218\n// ============================================================================\n\n/**\n * HMAC-SHA256 \uc11c\uba85 \uc0dd\uc131\n * @param {string} data \uc11c\uba85\ud560 \ub370\uc774\ud130\n * @param {string} key \uc11c\uba85 \ud0a4\n * @returns {string} BASE64 \uc778\ucf54\ub529\ub41c \uc11c\uba85\n */\nfunction generateHMAC(data, key) {\n  return crypto\n    .createHmac('sha256', key)\n    .update(data)\n    .digest('base64');\n}\n\n/**\n * \uac70\ub798\ub4f1\ub85d API \ud638\ucd9c \ub370\uc774\ud130 \uc0dd\uc131\n */\nfunction buildRegistrationPayload(orderData) {\n  const {\n    order_id,\n    amount,\n    buyer_name,\n    buyer_email,\n    buyer_phone,\n    product_name,\n  } = orderData;\n\n  return {\n    // \ud544\uc218 \ud56d\ubaa9\n    mid: MOBILPAY_CONFIG.mid,\n    tid: order_id, // \uac70\ub798 \uace0\uc720ID (\uc911\ubcf5 \uc5c6\uc5b4\uc57c \ud568)\n    amount: amount,\n    currency: 'KRW',\n    goods_name: product_name,\n    buyer_name: buyer_name,\n    buyer_email: buyer_email,\n    buyer_phone: buyer_phone,\n\n    // \uacb0\uc81c \ud6c4 \ucf5c\ubc31 URL\n    noti_url: MOBILPAY_CONFIG.noti_url,\n    ret_url: `https://your-domain.com/api/payment/return`, // \uacb0\uc81c\ucc3d \ub9ac\ud134 URL\n\n    // \uc120\ud0dd \uc0ac\ud56d\n    mname: MOBILPAY_CONFIG.mname,\n    pay_type: 'CARD', // \uc2e0\uc6a9\uce74\ub4dc \uacb0\uc81c\n\n    // \ud0c0\uc784\uc2a4\ud0d0\ud504\n    timestamp: Math.floor(Date.now() / 1000),\n  };\n}\n\n/**\n * HTTPS POST \uc694\uccad (MOBILPAY API \ud638\ucd9c\uc6a9)\n */\nfunction httpsPost(host, path, data) {\n  return new Promise((resolve, reject) => {\n    const options = {\n      hostname: host,\n      port: 443,\n      path: path,\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json',\n        'Content-Length': Buffer.byteLength(JSON.stringify(data)),\n      },\n    };\n\n    const req = https.request(options, (res) => {\n      let body = '';\n      res.on('data', (chunk) => {\n        body += chunk;\n      });\n      res.on('end', () => {\n        try {\n          const parsed = JSON.parse(body);\n          resolve({ statusCode: res.statusCode, data: parsed });\n        } catch (e) {\n          resolve({ statusCode: res.statusCode, data: body });\n        }\n      });\n    });\n\n    req.on('error', (e) => {\n      reject(e);\n    });\n\n    req.write(JSON.stringify(data));\n    req.end();\n  });\n}\n\n// ============================================================================\n// \uc5d4\ub4dc\ud3ec\uc778\ud2b8\n// ============================================================================\n\n/**\n * 1. \uac70\ub798\ub4f1\ub85d API\n * \uacb0\uc81c \uc2dc\uc791 \uc2dc \ud638\ucd9c - \uac70\ub798 \uc815\ubcf4\ub97c MOBILPAY\uc5d0 \ub4f1\ub85d\n */\napp.post('/api/payment/register', async (req, res) => {\n  try {\n    const {\n      order_id,\n      amount,\n      buyer_name,\n      buyer_email,\n      buyer_phone,\n      product_name,\n    } = req.body;\n\n    // \uc785\ub825\uac12 \uac80\uc99d\n    if (!order_id || !amount || !buyer_name || !buyer_email) {\n      return res.status(400).json({\n        code: 'INVALID_PARAM',\n        message: '\ud544\uc218 \ud30c\ub77c\ubbf8\ud130\uac00 \ub204\ub77d\ub418\uc5c8\uc2b5\ub2c8\ub2e4.',\n      });\n    }\n\n    // \uac70\ub798\ub4f1\ub85d \ub370\uc774\ud130 \uc0dd\uc131\n    const payloadData = buildRegistrationPayload({\n      order_id,\n      amount,\n      buyer_name,\n      buyer_email,\n      buyer_phone,\n      product_name,\n    });\n\n    // HMAC \uc11c\uba85 \uc0dd\uc131\n    const signData = `${payloadData.tid}${payloadData.amount}${payloadData.timestamp}`;\n    const signature = generateHMAC(signData, MOBILPAY_CONFIG.skey);\n\n    const registrationPayload = {\n      ...payloadData,\n      signature: signature,\n    };\n\n    // MOBILPAY \uac70\ub798\ub4f1\ub85d API \ud638\ucd9c\n    const result = await httpsPost(\n      MOBILPAY_CONFIG.test_host,\n      '/MUP/api/registration',\n      registrationPayload\n    );\n\n    if (result.statusCode === 200 && result.data.code === 'SUCCESS') {\n      return res.json({\n        code: 'SUCCESS',\n        message: '\uac70\ub798\ub4f1\ub85d \uc131\uacf5',\n        data: {\n          order_id: order_id,\n          tid: payloadData.tid,\n          amount: amount,\n          // \ud074\ub77c\uc774\uc5b8\ud2b8\uc5d0\uc11c \uacb0\uc81c\ucc3d \ud638\ucd9c \uc2dc \ud544\uc694\ud55c \uc815\ubcf4\n          pay_token: result.data.pay_token, // API \uc751\ub2f5\uc5d0\uc11c \ubc1b\uc740 \ud1a0\ud070\n        },\n      });\n    } else {\n      return res.status(400).json({\n        code: 'REGISTRATION_FAILED',\n        message: result.data.message || '\uac70\ub798\ub4f1\ub85d \uc2e4\ud328',\n        data: result.data,\n      });\n    }\n  } catch (error) {\n    console.error('\uac70\ub798\ub4f1\ub85d \uc5d0\ub7ec:', error);\n    return res.status(500).json({\n      code: 'SERVER_ERROR',\n      message: error.message,\n    });\n  }\n});\n\n/**\n * 2. \uc778\uc99d/\uc2b9\uc778 \uc751\ub2f5 \ucc98\ub9ac\n * \uacb0\uc81c\ucc3d\uc5d0\uc11c \uc0ac\uc6a9\uc790 \uc778\uc99d \ud6c4 \ub9ac\ud134\ub418\ub294 \ub370\uc774\ud130 \ucc98\ub9ac\n */\napp.post('/api/payment/auth-response', async (req, res) => {\n  try {\n    const { tid, auth_code, auth_date, signature } = req.body;\n\n    if (!tid || !auth_code) {\n      return res.status(400).json({\n        code: 'INVALID_PARAM',\n        message: '\ud544\uc218 \ud30c\ub77c\ubbf8\ud130\uac00 \ub204\ub77d\ub418\uc5c8\uc2b5\ub2c8\ub2e4.',\n      });\n    }\n\n    // \uc11c\uba85 \uac80\uc99d (HMAC \uac80\uc99d)\n    const signData = `${tid}${auth_code}${auth_date}`;\n    const expectedSignature = generateHMAC(signData, MOBILPAY_CONFIG.skey);\n\n    if (signature !== expectedSignature) {\n      console.warn('\uc11c\uba85 \uac80\uc99d \uc2e4\ud328:', { tid, signature, expectedSignature });\n      return res.status(400).json({\n        code: 'SIGNATURE_MISMATCH',\n        message: '\uc11c\uba85 \uac80\uc99d \uc2e4\ud328',\n      });\n    }\n\n    // \uc778\uc99d\ucf54\ub4dc \uc720\ud6a8\uc131 \uac80\uc99d \ub85c\uc9c1\n    console.log(`\uc778\uc99d \uc751\ub2f5 \ucc98\ub9ac - TID: ${tid}, \uc778\uc99d\ucf54\ub4dc: ${auth_code}`);\n\n    return res.json({\n      code: 'SUCCESS',\n      message: '\uc778\uc99d \uc751\ub2f5 \ucc98\ub9ac \uc644\ub8cc',\n      data: { tid, auth_code },\n    });\n  } catch (error) {\n    console.error('\uc778\uc99d\uc751\ub2f5 \ucc98\ub9ac \uc5d0\ub7ec:', error);\n    return res.status(500).json({\n      code: 'SERVER_ERROR',\n      message: error.message,\n    });\n  }\n});\n\n/**\n * 3. \uacb0\uc81c \uc2b9\uc778 API (TID \ubc29\uc2dd)\n * \uac70\ub798\ub4f1\ub85d \ud6c4 \uc778\uc99d \uc644\ub8cc \uc2dc \ud638\ucd9c - \uc2e4\uc81c \uacb0\uc81c \uc2b9\uc778\n */\napp.post('/api/payment/approval', async (req, res) => {\n  try {\n    const { tid, amount, auth_code } = req.body;\n\n    if (!tid || !amount || !auth_code) {\n      return res.status(400).json({\n        code: 'INVALID_PARAM',\n        message: '\ud544\uc218 \ud30c\ub77c\ubbf8\ud130\uac00 \ub204\ub77d\ub418\uc5c8\uc2b5\ub2c8\ub2e4.',\n      });\n    }\n\n    const timestamp = Math.floor(Date.now() / 1000);\n    const signData = `${tid}${amount}${timestamp}`;\n    const signature = generateHMAC(signData, MOBILPAY_CONFIG.skey);\n\n    const approvalPayload = {\n      tid: tid,\n      amount: amount,\n      auth_code: auth_code,\n      timestamp: timestamp,\n      signature: signature,\n    };\n\n    // MOBILPAY \uacb0\uc81c\uc2b9\uc778 API \ud638\ucd9c (\ubc31\uc5d4\ub4dc \uc804\uc6a9)\n    const result = await httpsPost(\n      MOBILPAY_CONFIG.test_host,\n      '/MUP/api/approval',\n      approvalPayload\n    );\n\n    if (result.statusCode === 200 && result.data.code === 'SUCCESS') {\n      // \ub370\uc774\ud130\ubca0\uc774\uc2a4\uc5d0 \uac70\ub798 \uc815\ubcf4 \uc800\uc7a5\n      console.log(`\uacb0\uc81c \uc2b9\uc778 \uc131\uacf5 - TID: ${tid}, \uae08\uc561: ${amount}`);\n\n      return res.json({\n        code: 'SUCCESS',\n        message: '\uacb0\uc81c \uc2b9\uc778 \uc131\uacf5',\n        data: {\n          tid: tid,\n          approval_number: result.data.approval_number,\n          amount: amount,\n        },\n      });\n    } else {\n      return res.status(400).json({\n        code: 'APPROVAL_FAILED',\n        message: result.data.message || '\uacb0\uc81c \uc2b9\uc778 \uc2e4\ud328',\n        data: result.data,\n      });\n    }\n  } catch (error) {\n    console.error('\uacb0\uc81c \uc2b9\uc778 \uc5d0\ub7ec:', error);\n    return res.status(500).json({\n      code: 'SERVER_ERROR',\n      message: error.message,\n    });\n  }\n});\n\n/**\n * 4. noti_url \ud578\ub4e4\ub7ec (\ucf5c\ubc31 \uc218\uc2e0)\n * MOBILPAY\uc5d0\uc11c \uacb0\uc81c \uc644\ub8cc \ud6c4 \uc11c\ubc84\ub85c \ud638\ucd9c\ud558\ub294 URL\n * \ud544\uc218: idempotency \uccb4\ud06c (\uac19\uc740 tid\ub294 \ud55c \ubc88\ub9cc \ucc98\ub9ac)\n */\napp.post('/api/payment/notify', async (req, res) => {\n  try {\n    const { tid, amount, auth_code, approval_number, signature, timestamp } =\n      req.body;\n\n    if (!tid || !amount) {\n      console.warn('noti_url: \ud544\uc218 \ud30c\ub77c\ubbf8\ud130 \ub204\ub77d', req.body);\n      return res.status(400).json({\n        code: 'INVALID_PARAM',\n        message: '\ud544\uc218 \ud30c\ub77c\ubbf8\ud130\uac00 \ub204\ub77d\ub418\uc5c8\uc2b5\ub2c8\ub2e4.',\n      });\n    }\n\n    // \uc11c\uba85 \uac80\uc99d\n    const signData = `${tid}${amount}${timestamp}`;\n    const expectedSignature = generateHMAC(signData, MOBILPAY_CONFIG.skey);\n\n    if (signature !== expectedSignature) {\n      console.warn('noti_url: \uc11c\uba85 \uac80\uc99d \uc2e4\ud328', {\n        tid,\n        signature,\n        expectedSignature,\n      });\n      return res.status(400).json({\n        code: 'SIGNATURE_MISMATCH',\n        message: '\uc11c\uba85 \uac80\uc99d \uc2e4\ud328',\n      });\n    }\n\n    // === Idempotency \uccb4\ud06c (\uc911\uc694!) ===\n    // \uac19\uc740 tid\ub85c \ub4e4\uc5b4\uc624\ub294 noti_url \ud638\ucd9c\uc740 \ud55c \ubc88\ub9cc \ucc98\ub9ac\n    // \uc2e4\uc81c\ub85c\ub294 \ub370\uc774\ud130\ubca0\uc774\uc2a4\uc5d0\uc11c \ucc98\ub9ac \uc5ec\ubd80\ub97c \ud655\uc778\ud574\uc57c \ud568\n    const isProcessed = await checkIfNotificationProcessed(tid);\n    if (isProcessed) {\n      console.log(`noti_url: \uc774\ubbf8 \ucc98\ub9ac\ub428 - TID: ${tid}`);\n      // \uc911\ubcf5 \ud638\ucd9c\uc774\uc9c0\ub9cc 200 OK \ubc18\ud658 (\uba71\ub4f1\uc131 \ud655\ubcf4)\n      return res.json({\n        code: 'SUCCESS',\n        message: '\uc774\ubbf8 \ucc98\ub9ac\ub41c \uac70\ub798\uc785\ub2c8\ub2e4.',\n      });\n    }\n\n    // \uac70\ub798 \uc815\ubcf4 \uc5c5\ub370\uc774\ud2b8\n    console.log(`noti_url \ucc98\ub9ac - TID: ${tid}, \uae08\uc561: ${amount}`);\n\n    // \ub370\uc774\ud130\ubca0\uc774\uc2a4\uc5d0 \uc800\uc7a5\n    await saveTransactionNotification({\n      tid: tid,\n      amount: amount,\n      auth_code: auth_code,\n      approval_number: approval_number,\n      status: 'COMPLETED',\n      received_at: new Date(),\n    });\n\n    // \ucc98\ub9ac \uc644\ub8cc \ud45c\uc2dc\n    await markNotificationAsProcessed(tid);\n\n    return res.json({\n      code: 'SUCCESS',\n      message: '\uacb0\uc81c \uc644\ub8cc \uc54c\ub9bc \ucc98\ub9ac \uc644\ub8cc',\n      data: {\n        tid: tid,\n        amount: amount,\n        approval_number: approval_number,\n      },\n    });\n  } catch (error) {\n    console.error('noti_url \ucc98\ub9ac \uc5d0\ub7ec:', error);\n    // \uc5d0\ub7ec \ubc1c\uc0dd \uc2dc\uc5d0\ub3c4 200 OK \ubc18\ud658\ud558\uace0 \uc7ac\uc2dc\ub3c4 \uac00\ub2a5\ud558\ub3c4\ub85d \uc124\uacc4\n    return res.status(500).json({\n      code: 'SERVER_ERROR',\n      message: error.message,\n    });\n  }\n});\n\n/**\n * 5. \uacb0\uc81c \ucde8\uc18c API\n */\napp.post('/api/payment/cancel', async (req, res) => {\n  try {\n    const { tid, amount, cancel_reason } = req.body;\n\n    if (!tid || !amount) {\n      return res.status(400).json({\n        code: 'INVALID_PARAM',\n        message: '\ud544\uc218 \ud30c\ub77c\ubbf8\ud130\uac00 \ub204\ub77d\ub418\uc5c8\uc2b5\ub2c8\ub2e4.',\n      });\n    }\n\n    const timestamp = Math.floor(Date.now() / 1000);\n    const signData = `${tid}${amount}${timestamp}`;\n    const signature = generateHMAC(signData, MOBILPAY_CONFIG.skey);\n\n    const cancelPayload = {\n      tid: tid,\n      amount: amount,\n      cancel_reason: cancel_reason || '\uace0\uac1d \uc694\uccad',\n      timestamp: timestamp,\n      signature: signature,\n    };\n\n    // MOBILPAY \uacb0\uc81c\ucde8\uc18c API \ud638\ucd9c\n    const result = await httpsPost(\n      MOBILPAY_CONFIG.test_host,\n      '/MUP/api/cancel',\n      cancelPayload\n    );\n\n    if (result.statusCode === 200 && result.data.code === 'SUCCESS') {\n      console.log(`\uacb0\uc81c \ucde8\uc18c \uc131\uacf5 - TID: ${tid}, \uae08\uc561: ${amount}`);\n\n      return res.json({\n        code: 'SUCCESS',\n        message: '\uacb0\uc81c \ucde8\uc18c \uc131\uacf5',\n        data: {\n          tid: tid,\n          amount: amount,\n        },\n      });\n    } else {\n      return res.status(400).json({\n        code: 'CANCEL_FAILED',\n        message: result.data.message || '\uacb0\uc81c \ucde8\uc18c \uc2e4\ud328',\n      });\n    }\n  } catch (error) {\n    console.error('\uacb0\uc81c \ucde8\uc18c \uc5d0\ub7ec:', error);\n    return res.status(500).json({\n      code: 'SERVER_ERROR',\n      message: error.message,\n    });\n  }\n});\n\n// ============================================================================\n// \ud5ec\ud37c \ud568\uc218 (\uc2e4\uc81c\ub85c\ub294 \ub370\uc774\ud130\ubca0\uc774\uc2a4 \uc870\ud68c)\n// ============================================================================\n\n/**\n * noti_url \uc911\ubcf5 \ucc98\ub9ac \ubc29\uc9c0\uc6a9 \uba54\ubaa8\ub9ac \uc800\uc7a5\uc18c\n * \uc2e4\uc81c\ub85c\ub294 Redis \ub610\ub294 \ub370\uc774\ud130\ubca0\uc774\uc2a4 \uc0ac\uc6a9 \uad8c\uc7a5\n */\nconst processedNotifications = new Set();\n\nasync function checkIfNotificationProcessed(tid) {\n  // \uc2e4\uc81c\ub85c\ub294 \ub370\uc774\ud130\ubca0\uc774\uc2a4 \uc870\ud68c\n  return processedNotifications.has(tid);\n}\n\nasync function markNotificationAsProcessed(tid) {\n  processedNotifications.add(tid);\n  // \uc2e4\uc81c\ub85c\ub294 \ub370\uc774\ud130\ubca0\uc774\uc2a4 \uc800\uc7a5\n}\n\nasync function saveTransactionNotification(data) {\n  // \uc2e4\uc81c\ub85c\ub294 \ub370\uc774\ud130\ubca0\uc774\uc2a4\uc5d0 \uc800\uc7a5\n  console.log('[DB] \uac70\ub798 \uc800\uc7a5:', data);\n}\n\n// ============================================================================\n// \uacb0\uc81c \ud750\ub984 \uc124\uba85\n// ============================================================================\n\n/**\n * \uc804\uccb4 \uacb0\uc81c \ud750\ub984:\n *\n * 1. \ud504\ub860\ud2b8\uc5d4\ub4dc: /api/payment/register \ud638\ucd9c\n *    - \uac70\ub798 \uc815\ubcf4 \uc804\uc1a1 (order_id, amount, buyer_info, product_name)\n *    - \uc751\ub2f5\ubc1b\uc740 pay_token\uc744 \uc774\uc6a9\ud574 \uacb0\uc81c\ucc3d \ud638\ucd9c\n *\n * 2. \uc0ac\uc6a9\uc790: MOBILPAY \uacb0\uc81c\ucc3d\uc5d0\uc11c \uc2e0\uc6a9\uce74\ub4dc \uc815\ubcf4 \uc785\ub825\n *    - \uce74\ub4dc\ubc88\ud638, \uc720\ud6a8\uae30\uac04, CVC \ub4f1\n *    - MOBILPAY \uce21\uc5d0\uc11c \uc778\uc99d \ucc98\ub9ac\n *\n * 3. \ud504\ub860\ud2b8\uc5d4\ub4dc: /api/payment/auth-response \ud638\ucd9c\n *    - \uacb0\uc81c\ucc3d\uc5d0\uc11c \ubc18\ud658\ub41c auth_code \uc804\uc1a1\n *    - \uc11c\uba85 \uac80\uc99d\n *\n * 4. \ubc31\uc5d4\ub4dc: /api/payment/approval \ud638\ucd9c\n *    - \uc2e4\uc81c \uacb0\uc81c \uc2b9\uc778 (tid, amount, auth_code \uc804\uc1a1)\n *    - MOBILPAY\uc5d0\uc11c \uc2b9\uc778 \ucc98\ub9ac\n *    - \uc2b9\uc778 \ubc88\ud638(approval_number) \uc218\uc2e0\n *\n * 5. MOBILPAY \u2192 \ubc31\uc5d4\ub4dc: /api/payment/notify \ud638\ucd9c\n *    - \uacb0\uc81c \uc644\ub8cc \uc54c\ub9bc (Webhook)\n *    - tid, amount, approval_number \uc804\uc1a1\n *    - \uc11c\uba85 \uac80\uc99d \ud544\uc218\n *    - \uc911\ubcf5 \ucc98\ub9ac \ubc29\uc9c0 (idempotency)\n *\n * 6. \ubc31\uc5d4\ub4dc: \uac70\ub798 \uc815\ubcf4 \uc800\uc7a5\n *    - \ub370\uc774\ud130\ubca0\uc774\uc2a4\uc5d0 \uac70\ub798 \uc815\ubcf4 \uae30\ub85d\n *    - \uc8fc\ubb38 \uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8\n *\n * \ucde8\uc18c \ucc98\ub9ac:\n * - /api/payment/cancel \ud638\ucd9c\n * - tid\uc640 amount \ud544\uc694\n * - MOBILPAY\uc5d0\uc11c \ucde8\uc18c \ucc98\ub9ac\n */\n\n// ============================================================================\n// \uc11c\ubc84 \uc2dc\uc791\n// ============================================================================\n\nconst PORT = process.env.PORT || 3000;\napp.listen(PORT, () => {\n  console.log(`MOBILPAY \uacb0\uc81c \uc11c\ubc84 \uc2dc\uc791 - PORT: ${PORT}`);\n  console.log(`\ud658\uacbd: ${MOBILPAY_CONFIG.test_host === 'test.mobilians.co.kr' ? '\ud14c\uc2a4\ud2b8' : '\ud504\ub85c\ub355\uc158'}`);\n  console.log(`noti_url: ${MOBILPAY_CONFIG.noti_url}`);\n});\n\nmodule.exports = app;\n"}], "grading": {"expectations": [{"text": "skey\ub294 \ud658\uacbd\ubcc0\uc218(process.env)\uc5d0\uc11c \ub85c\ub4dc\ud558\uace0 \ud558\ub4dc\ucf54\ub529\ud558\uc9c0 \uc54a\uc74c", "passed": false, "evidence": "Line 27: skey: process.env.MOBILPAY_SKEY || 'test_skey_xxxxx', - Falls back to hardcoded placeholder string instead of requiring env var"}, {"text": "HMAC-SHA256 \uac80\uc99d \ub85c\uc9c1\uc774 \uc11c\ubc84\uc0ac\uc774\ub4dc\uc5d0 \uad6c\ud604\ub418\uc5b4 \uc788\uc74c", "passed": true, "evidence": "Lines 47-52: generateHMAC() function implemented with crypto.createHmac('sha256', key) and lines 227-237: HMAC verification in auth-response handler"}, {"text": "noti_url \ud578\ub4e4\ub7ec\uc5d0 \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4(\uba71\ub4f1\uc131) \ub85c\uc9c1\uc774 \uad6c\ud604\ub418\uc5b4 \uc788\uc74c", "passed": true, "evidence": "Lines 353-364: checkIfNotificationProcessed(tid) called with idempotency check, returns SUCCESS for already processed transactions"}, {"text": "noti_url \uc751\ub2f5\uc774 HTML \uc5c6\uc774 SUCCESS/FAIL \ubb38\uc790\uc5f4\ub9cc \ucd9c\ub825\ud568", "passed": false, "evidence": "Lines 360-363 and 382-390: Returns JSON response res.json({...}) instead of plain text 'SUCCESS'/'FAIL'"}, {"text": "\uac70\ub798\ub4f1\ub85d API \uc5d4\ub4dc\ud3ec\uc778\ud2b8\uac00 /MUP/api/registration \uc73c\ub85c \uc815\ud655\ud568", "passed": true, "evidence": "Line 180: '/MUP/api/registration' in httpsPost call"}, {"text": "\ud14c\uc2a4\ud2b8 \ud638\uc2a4\ud2b8\uac00 test.mobilians.co.kr \ub85c \uc124\uc815\ub428", "passed": true, "evidence": "Line 23: test_host: 'test.mobilians.co.kr' in MOBILPAY_CONFIG"}, {"text": "cash_code\uac00 CN(\uc2e0\uc6a9\uce74\ub4dc)\uc73c\ub85c \uc124\uc815\ub428", "passed": false, "evidence": "Line 84: pay_type: 'CARD', - Uses pay_type instead of cash_code, and no cash_code field set to CN"}, {"text": "\uae08\uc561 \uac80\uc99d \ub85c\uc9c1\uc774 \ud3ec\ud568\ub428 (\uc694\uccad \uae08\uc561 vs \uc751\ub2f5 \uae08\uc561)", "passed": false, "evidence": "No amount validation found in noti_url handler (lines 324-399). Handler accepts amount without comparing to original request"}]}}, {"id": "eval-2-kakaopay-python-with_skill", "prompt": "\uce74\uce74\uc624\ud398\uc774 \uac04\ud3b8\uacb0\uc81c\ub97c MOBILPAY\ub85c \uc5f0\ub3d9\ud558\uace0 \uc2f6\uc2b5\ub2c8\ub2e4. Python(Flask)\uc73c\ub85c \uac70\ub798\ub4f1\ub85d \uc694\uccad \ucf54\ub4dc\ub97c \uc791\uc131\ud574\uc8fc\uc138\uc694. \uacb0\uc81c \uae08\uc561\uc740 15000\uc6d0\uc774\uace0 \uc0c1\ud488\uba85\uc740 '\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5'\uc785\ub2c8\ub2e4.", "eval_id": 2, "outputs": [{"name": "payment-app.py", "type": "text", "content": "\"\"\"\nMOBILPAY \uce74\uce74\uc624\ud398\uc774 \uac04\ud3b8\uacb0\uc81c \uc5f0\ub3d9 Flask \uc560\ud50c\ub9ac\ucf00\uc774\uc158\n\n\uc774 \uc560\ud50c\ub9ac\ucf00\uc774\uc158\uc740 MOBILPAY REST API\ub97c \uc0ac\uc6a9\ud558\uc5ec \uce74\uce74\uc624\ud398\uc774 \uac04\ud3b8\uacb0\uc81c\ub97c \uad6c\ud604\ud569\ub2c8\ub2e4.\n\n\ubcf4\uc548 \uaddc\uce59:\n1. skey(\uc11c\ube44\uc2a4 \ud0a4)\ub294 \ud658\uacbd\ubcc0\uc218\uc5d0\uc11c\ub9cc \ub85c\ub4dc (\ud558\ub4dc\ucf54\ub529 \uae08\uc9c0)\n2. HMAC \uac80\uc99d\uc740 \ubc31\uc5d4\ub4dc\uc5d0\uc11c\ub9cc \uc218\ud589\n3. noti_url \ud578\ub4e4\ub7ec\ub294 \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4 \ub85c\uc9c1 \ud544\uc218\n4. \uacb0\uc81c\uc2b9\uc778 API\ub294 \ubc31\uc5d4\ub4dc\uc5d0\uc11c\ub9cc \ud638\ucd9c\n\"\"\"\n\nimport os\nimport hmac\nimport hashlib\nimport base64\nimport json\nimport uuid\nfrom datetime import datetime, timedelta\nfrom flask import Flask, request, jsonify, render_template_string\nimport requests\n\napp = Flask(__name__)\n\n# \ud658\uacbd\ubcc0\uc218\uc5d0\uc11c \uc124\uc815 \ub85c\ub4dc\nMOBILPAY_SKEY = os.environ.get('MOBILPAY_SKEY')\nMOBILPAY_SID = os.environ.get('MOBILPAY_SID', '000730010001')  # \ud14c\uc2a4\ud2b8\uc6a9 \uae30\ubcf8\uac12\nENVIRONMENT = os.environ.get('MOBILPAY_ENV', 'test')  # 'test' \ub610\ub294 'production'\n\n# \ud638\uc2a4\ud2b8 \uc124\uc815\nif ENVIRONMENT == 'production':\n    BASE_URL = 'https://mup.mobilians.co.kr'\nelse:\n    BASE_URL = 'https://test.mobilians.co.kr'\n\n# \uac04\ub2e8\ud55c \uba54\ubaa8\ub9ac \uc800\uc7a5\uc18c (\uc2e4\uc81c\ub294 \ub370\uc774\ud130\ubca0\uc774\uc2a4 \uc0ac\uc6a9 \uad8c\uc7a5)\nprocessed_trades = {}\n\n\ndef calculate_hmac(amount, ok_url, trade_id, time_stamp):\n    \"\"\"\n    \uac70\ub798\ub4f1\ub85d/\uc2b9\uc778 HMAC \uacc4\uc0b0\n\n    \uba54\uc2dc\uc9c0 \uad6c\uc131: amount + ok_url + trade_id + time_stamp\n    \"\"\"\n    if not MOBILPAY_SKEY:\n        raise ValueError('MOBILPAY_SKEY \ud658\uacbd\ubcc0\uc218\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc74c')\n\n    message = str(amount) + ok_url + trade_id + time_stamp\n    h = hmac.new(\n        MOBILPAY_SKEY.encode('utf-8'),\n        message.encode('utf-8'),\n        hashlib.sha256\n    )\n    return base64.b64encode(h.digest()).decode('utf-8')\n\n\ndef generate_time_stamp():\n    \"\"\"\ud604\uc7ac \uc2dc\uac04\uc744 yyyymmddhhmmss \ud615\uc2dd\uc73c\ub85c \ubc18\ud658\"\"\"\n    return datetime.now().strftime('%Y%m%d%H%M%S')\n\n\ndef generate_trade_id():\n    \"\"\"\uace0\uc720\ud55c \uac70\ub798\ubc88\ud638 \uc0dd\uc131\"\"\"\n    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')\n    unique_id = str(uuid.uuid4())[:8]\n    return f'ORDER_{timestamp}_{unique_id}'\n\n\n@app.route('/')\ndef index():\n    \"\"\"\uacb0\uc81c \ud398\uc774\uc9c0 (\uac04\ub2e8\ud55c \ud14c\uc2a4\ud2b8\uc6a9 HTML)\"\"\"\n    html = '''\n    <!DOCTYPE html>\n    <html>\n    <head>\n        <meta charset=\"utf-8\">\n        <title>MOBILPAY \uce74\uce74\uc624\ud398\uc774 \uac04\ud3b8\uacb0\uc81c</title>\n        <style>\n            body { font-family: Arial, sans-serif; margin: 40px; }\n            .container { max-width: 600px; margin: 0 auto; }\n            .form-group { margin-bottom: 15px; }\n            label { display: block; margin-bottom: 5px; font-weight: bold; }\n            input, select { padding: 8px; width: 100%; box-sizing: border-box; }\n            button { padding: 10px 20px; background-color: #4CAF50; color: white;\n                     border: none; cursor: pointer; font-size: 16px; }\n            button:hover { background-color: #45a049; }\n        </style>\n    </head>\n    <body>\n        <div class=\"container\">\n            <h1>MOBILPAY \uce74\uce74\uc624\ud398\uc774 \uac04\ud3b8\uacb0\uc81c</h1>\n            <form id=\"paymentForm\">\n                <div class=\"form-group\">\n                    <label for=\"productName\">\uc0c1\ud488\uba85</label>\n                    <input type=\"text\" id=\"productName\" value=\"\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5\" readonly>\n                </div>\n                <div class=\"form-group\">\n                    <label for=\"amount\">\uacb0\uc81c \uae08\uc561</label>\n                    <input type=\"text\" id=\"amount\" value=\"15000\" readonly>\n                </div>\n                <div class=\"form-group\">\n                    <label for=\"userName\">\uc774\ub984</label>\n                    <input type=\"text\" id=\"userName\" placeholder=\"\uace0\uac1d \uc774\ub984 \uc785\ub825\" required>\n                </div>\n                <div class=\"form-group\">\n                    <label for=\"userEmail\">\uc774\uba54\uc77c</label>\n                    <input type=\"email\" id=\"userEmail\" placeholder=\"\uace0\uac1d \uc774\uba54\uc77c \uc785\ub825\" required>\n                </div>\n                <button type=\"submit\">\uacb0\uc81c \uc9c4\ud589</button>\n            </form>\n        </div>\n        <script>\n            document.getElementById('paymentForm').addEventListener('submit', async (e) => {\n                e.preventDefault();\n                const productName = document.getElementById('productName').value;\n                const amount = document.getElementById('amount').value;\n                const userName = document.getElementById('userName').value;\n                const userEmail = document.getElementById('userEmail').value;\n\n                try {\n                    const response = await fetch('/api/register-payment', {\n                        method: 'POST',\n                        headers: { 'Content-Type': 'application/json' },\n                        body: JSON.stringify({\n                            product_name: productName,\n                            amount: parseInt(amount),\n                            user_name: userName,\n                            user_email: userEmail\n                        })\n                    });\n\n                    const data = await response.json();\n                    if (data.success && data.pay_url) {\n                        // \uacb0\uc81c\ucc3d\uc744 \ud31d\uc5c5\uc73c\ub85c \ud638\ucd9c\n                        window.open(data.pay_url, 'MOBILPAY_PAYMENT',\n                                   'width=820,height=600,top=100,left=100');\n                    } else {\n                        alert('\uac70\ub798 \ub4f1\ub85d \uc2e4\ud328: ' + (data.message || '\uc54c \uc218 \uc5c6\ub294 \uc624\ub958'));\n                    }\n                } catch (error) {\n                    alert('\uc624\ub958 \ubc1c\uc0dd: ' + error.message);\n                }\n            });\n        </script>\n    </body>\n    </html>\n    '''\n    return render_template_string(html)\n\n\n@app.route('/api/register-payment', methods=['POST'])\ndef register_payment():\n    \"\"\"\n    MOBILPAY \uac70\ub798\ub4f1\ub85d API \ud638\ucd9c\n\n    \uce74\uce74\uc624\ud398\uc774 \uac04\ud3b8\uacb0\uc81c(ep_code=KKO)\ub97c \uc0ac\uc6a9\ud569\ub2c8\ub2e4.\n    \"\"\"\n    try:\n        data = request.get_json()\n\n        # \uc694\uccad \ud30c\ub77c\ubbf8\ud130 \uac80\uc99d\n        product_name = data.get('product_name', '\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5')\n        amount = data.get('amount', 15000)\n        user_name = data.get('user_name', '\uace0\uac1d')\n        user_email = data.get('user_email')\n\n        if not user_email:\n            return jsonify({\n                'success': False,\n                'message': '\uc774\uba54\uc77c\uc740 \ud544\uc218\uc785\ub2c8\ub2e4'\n            }), 400\n\n        # \uac70\ub798\ubc88\ud638 \ubc0f \uc2dc\uac04 \uc0dd\uc131\n        trade_id = generate_trade_id()\n        time_stamp = generate_time_stamp()\n\n        # ok_url\uacfc noti_url\uc740 \uc2e4\uc81c \ud658\uacbd\uc5d0 \ub9de\uac8c \uc124\uc815\n        ok_url = request.host_url.rstrip('/') + '/payment/result'\n        noti_url = request.host_url.rstrip('/') + '/payment/noti'\n        site_url = 'www.example.com'\n\n        # HMAC \uacc4\uc0b0 (\uc11c\ubc84\uc0ac\uc774\ub4dc\uc5d0\uc11c\ub9cc \uc218\ud589)\n        hmac_value = calculate_hmac(amount, ok_url, trade_id, time_stamp)\n\n        # MOBILPAY \uac70\ub798\ub4f1\ub85d API \uc694\uccad \ubcf8\ubb38\n        registration_payload = {\n            'sid': MOBILPAY_SID,\n            'cash_code': 'CN',  # \uac04\ud3b8\uacb0\uc81c\ub294 CN(\uc2e0\uc6a9\uce74\ub4dc) \ucf54\ub4dc \uc0ac\uc6a9\n            'product_name': product_name,\n            'trade_id': trade_id,\n            'site_url': site_url,\n            'ok_url': ok_url,\n            'noti_url': noti_url,\n            'user_name': user_name,\n            'user_email': user_email,\n            'amount': {\n                'total': amount,\n                'tax': 0,\n                'tax_free': 0,\n                'supply_value': 0\n            },\n            'pay_options': {\n                'ep_code': 'KKO',  # \uce74\uce74\uc624\ud398\uc774 \ucf54\ub4dc\n                'ep_pay_type': 'C'  # \uce74\ub4dc \uacb0\uc81c\n            },\n            'call_type': 'P',  # \ud31d\uc5c5 \ubc29\uc2dd\n            'time_stamp': time_stamp\n        }\n\n        # MOBILPAY REST API \ud638\ucd9c\n        url = f'{BASE_URL}/MUP/api/registration'\n        headers = {'Content-Type': 'application/json'}\n\n        response = requests.post(url, json=registration_payload, headers=headers, timeout=10)\n        response.raise_for_status()\n\n        result = response.json()\n\n        # \uc751\ub2f5 \uac80\uc99d\n        if result.get('code') != '0000':\n            return jsonify({\n                'success': False,\n                'message': f\"API \uc5d0\ub7ec: {result.get('message', '\uc54c \uc218 \uc5c6\ub294 \uc624\ub958')}\"\n            }), 400\n\n        # \uc751\ub2f5 HMAC \uac80\uc99d\n        received_hmac = result.get('hmac')\n        calculated_hmac = calculate_hmac(amount, ok_url, trade_id, result.get('time_stamp'))\n\n        if received_hmac != calculated_hmac:\n            return jsonify({\n                'success': False,\n                'message': 'HMAC \uac80\uc99d \uc2e4\ud328 - \uc751\ub2f5\uc774 \ubcc0\uc870\ub418\uc5c8\uc744 \uc218 \uc788\uc74c'\n            }), 400\n\n        # \uac70\ub798 \uc815\ubcf4 \uc800\uc7a5 (\ub098\uc911\uc5d0 noti_url \ucc98\ub9ac \uc2dc \uc0ac\uc6a9)\n        processed_trades[trade_id] = {\n            'amount': amount,\n            'timestamp': time_stamp,\n            'ok_url': ok_url,\n            'status': 'registered'\n        }\n\n        return jsonify({\n            'success': True,\n            'message': '\uac70\ub798 \ub4f1\ub85d \uc131\uacf5',\n            'pay_url': result.get('pay_url'),\n            'tid': result.get('tid'),\n            'trade_id': trade_id,\n            'qrcode_url': result.get('qrcode_url')\n        })\n\n    except requests.exceptions.RequestException as e:\n        return jsonify({\n            'success': False,\n            'message': f'API \ud638\ucd9c \uc2e4\ud328: {str(e)}'\n        }), 500\n    except Exception as e:\n        return jsonify({\n            'success': False,\n            'message': f'\uc624\ub958 \ubc1c\uc0dd: {str(e)}'\n        }), 500\n\n\n@app.route('/payment/result', methods=['GET', 'POST'])\ndef payment_result():\n    \"\"\"\n    \uacb0\uc81c \uacb0\uacfc \ud398\uc774\uc9c0 (ok_url)\n\n    \uc0ac\uc6a9\uc790\uac00 \uacb0\uc81c\ub97c \uc644\ub8cc\ud558\uba74 MOBILPAY\uc5d0\uc11c \uc774 URL\ub85c \ub9ac\ub2e4\uc774\ub809\ud2b8\ud569\ub2c8\ub2e4.\n    \"\"\"\n    try:\n        # GET \ub610\ub294 POST \ud30c\ub77c\ubbf8\ud130 \ucc98\ub9ac\n        if request.method == 'POST':\n            params = request.form\n        else:\n            params = request.args\n\n        code = params.get('code')\n        message = params.get('message')\n        trade_id = params.get('trade_id')\n        tid = params.get('tid')\n        amount = params.get('amount')\n        cash_code = params.get('cash_code')\n        pay_token = params.get('pay_token')\n\n        # \uc751\ub2f5 \uac80\uc99d\n        if code != '0000':\n            html = f'''\n            <html>\n            <head><meta charset=\"utf-8\"><title>\uacb0\uc81c \uc2e4\ud328</title></head>\n            <body>\n                <h1>\uacb0\uc81c \uc2e4\ud328</h1>\n                <p>\ucf54\ub4dc: {code}</p>\n                <p>\uba54\uc2dc\uc9c0: {message}</p>\n                <p><a href=\"/\">\ub2e4\uc2dc \uc2dc\ub3c4</a></p>\n            </body>\n            </html>\n            '''\n            return html\n\n        # \uae08\uc561 \uac80\uc99d\n        stored_trade = processed_trades.get(trade_id, {})\n        stored_amount = stored_trade.get('amount')\n\n        if str(stored_amount) != str(amount):\n            html = '''\n            <html>\n            <head><meta charset=\"utf-8\"><title>\uac80\uc99d \uc2e4\ud328</title></head>\n            <body>\n                <h1>\uacb0\uc81c \uac80\uc99d \uc2e4\ud328</h1>\n                <p>\uae08\uc561\uc774 \uc77c\uce58\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.</p>\n                <p><a href=\"/\">\ub3cc\uc544\uac00\uae30</a></p>\n            </body>\n            </html>\n            '''\n            return html\n\n        # \uc131\uacf5 \uc751\ub2f5\n        html = f'''\n        <html>\n        <head><meta charset=\"utf-8\"><title>\uacb0\uc81c \uc644\ub8cc</title></head>\n        <body>\n            <h1>\uacb0\uc81c\uac00 \uc644\ub8cc\ub418\uc5c8\uc2b5\ub2c8\ub2e4!</h1>\n            <ul>\n                <li>\uac70\ub798\ubc88\ud638: {trade_id}</li>\n                <li>TID: {tid}</li>\n                <li>\uacb0\uc81c \uae08\uc561: {amount}\uc6d0</li>\n                <li>\uacb0\uc81c\uc218\ub2e8: {cash_code}</li>\n            </ul>\n            <p>\uac10\uc0ac\ud569\ub2c8\ub2e4!</p>\n            <p><a href=\"/\">\ub3cc\uc544\uac00\uae30</a></p>\n        </body>\n        </html>\n        '''\n\n        # \uac70\ub798 \uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8\n        if trade_id in processed_trades:\n            processed_trades[trade_id]['status'] = 'completed'\n\n        return html\n\n    except Exception as e:\n        return f'\uc624\ub958: {str(e)}', 500\n\n\n@app.route('/payment/noti', methods=['POST'])\ndef payment_noti():\n    \"\"\"\n    \uacb0\uc81c \uacb0\uacfc \ud6c4\ucc98\ub9ac URL (noti_url)\n\n    MOBILPAY \uc2dc\uc2a4\ud15c\uc5d0\uc11c \ucd5c\ub300 20\ud68c\uae4c\uc9c0 \ubc18\ubcf5 \ud638\ucd9c\ud569\ub2c8\ub2e4.\n    \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4 \ub85c\uc9c1\uc774 \ubc18\ub4dc\uc2dc \ud3ec\ud568\ub418\uc5b4\uc57c \ud569\ub2c8\ub2e4.\n    \"\"\"\n    try:\n        # IP \uac80\uc99d (KG\ubaa8\ube4c\ub9ac\uc5b8\uc2a4 \uacb0\uc81c\uc11c\ubc84 IP\ub9cc \ud5c8\uc6a9)\n        client_ip = request.remote_addr\n        ALLOWED_IPS = [\n            '175.158.12.1',    # \uba54\uc778 NOTI \uc11c\ubc84\n            '175.158.12.2',    # \ud14c\uc2a4\ud2b8 NOTI \uc11c\ubc84\n            '116.127.121.132'  # \ubc31\uc5c5 NOTI \uc11c\ubc84\n        ]\n        # \ud14c\uc2a4\ud2b8 \ud658\uacbd\uc5d0\uc11c\ub294 localhost \ud5c8\uc6a9\n        if ENVIRONMENT != 'test' and client_ip not in ALLOWED_IPS:\n            print(f'\ud5c8\uc6a9\ub418\uc9c0 \uc54a\uc740 IP: {client_ip}')\n            return 'FAIL'\n\n        params = request.form\n        code = params.get('code')\n        pay_token = params.get('pay_token')\n        amount = params.get('amount')\n        trade_id = params.get('trade_id')\n        hmac_value = params.get('hmac')\n        cash_code = params.get('cash_code')\n        message = params.get('message')\n\n        # 1. \uc751\ub2f5 \ucf54\ub4dc \ud655\uc778\n        if code != '0000':\n            print(f'\uacb0\uc81c \uc2e4\ud328: {code} - {message}')\n            return 'FAIL'\n\n        # 2. pay_token \uac80\uc99d\n        if not pay_token or len(pay_token) > 15:\n            print(f'\uc720\ud6a8\ud558\uc9c0 \uc54a\uc740 pay_token: {pay_token}')\n            return 'FAIL'\n\n        # 3. \uae08\uc561 \uac80\uc99d\n        stored_trade = processed_trades.get(trade_id, {})\n        stored_amount = stored_trade.get('amount')\n\n        if not stored_amount or str(stored_amount) != str(amount):\n            print(f'\uae08\uc561 \ubd88\uc77c\uce58: {stored_amount} != {amount}')\n            return 'FAIL'\n\n        # 4. HMAC \uac80\uc99d\n        ok_url = stored_trade.get('ok_url', '')\n        time_stamp = stored_trade.get('timestamp', '')\n\n        if ok_url and time_stamp:\n            calculated_hmac = calculate_hmac(amount, ok_url, trade_id, time_stamp)\n            if calculated_hmac != hmac_value:\n                print(f'HMAC \uac80\uc99d \uc2e4\ud328')\n                return 'FAIL'\n\n        # 5. \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4 (\ud575\uc2ec!)\n        # \uc774\ubbf8 \ucc98\ub9ac\ub41c \uac70\ub798\uc778\uc9c0 \ud655\uc778\n        if trade_id in processed_trades and processed_trades[trade_id].get('status') == 'processed':\n            print(f'\uc774\ubbf8 \ucc98\ub9ac\ub41c \uac70\ub798: {trade_id}')\n            return 'SUCCESS'  # \ubc18\ubcf5 \ud638\ucd9c \uc911\uc9c0\ub97c \uc704\ud574 SUCCESS \ubc18\ud658\n\n        # 6. \uacb0\uc81c \uc131\uacf5 \ucc98\ub9ac\n        # \uc2e4\uc81c \ud658\uacbd\uc5d0\uc11c\ub294 \uc5ec\uae30\uc11c \ub370\uc774\ud130\ubca0\uc774\uc2a4 \uc5c5\ub370\uc774\ud2b8, \uc0c1\ud488 \uc81c\uacf5, \uc774\uba54\uc77c \ubc1c\uc1a1 \ub4f1\uc744 \uc218\ud589\ud569\ub2c8\ub2e4.\n        print(f'\uacb0\uc81c \uc131\uacf5 \ucc98\ub9ac: {trade_id}, {amount}\uc6d0, \uacb0\uc81c\uc218\ub2e8: {cash_code}')\n\n        # \ucc98\ub9ac \uc644\ub8cc \ud50c\ub798\uadf8 \uc800\uc7a5\n        if trade_id in processed_trades:\n            processed_trades[trade_id]['status'] = 'processed'\n            processed_trades[trade_id]['pay_token'] = pay_token\n\n        return 'SUCCESS'\n\n    except Exception as e:\n        print(f'noti_url \ucc98\ub9ac \uc624\ub958: {str(e)}')\n        return 'FAIL'\n\n\n@app.route('/payment/fail', methods=['GET', 'POST'])\ndef payment_fail():\n    \"\"\"\uacb0\uc81c \uc2e4\ud328 \ud398\uc774\uc9c0 (fail_url)\"\"\"\n    html = '''\n    <html>\n    <head><meta charset=\"utf-8\"><title>\uacb0\uc81c \uc2e4\ud328</title></head>\n    <body>\n        <h1>\uacb0\uc81c\uac00 \ucde8\uc18c\ub418\uc5c8\uc2b5\ub2c8\ub2e4.</h1>\n        <p><a href=\"/\">\ub2e4\uc2dc \uc2dc\ub3c4</a></p>\n    </body>\n    </html>\n    '''\n    return html\n\n\n@app.route('/health', methods=['GET'])\ndef health_check():\n    \"\"\"\ud5ec\uc2a4\uccb4\ud06c \uc5d4\ub4dc\ud3ec\uc778\ud2b8\"\"\"\n    return jsonify({\n        'status': 'ok',\n        'environment': ENVIRONMENT,\n        'base_url': BASE_URL\n    })\n\n\nif __name__ == '__main__':\n    # \ud658\uacbd\ubcc0\uc218 \ud655\uc778\n    if not MOBILPAY_SKEY:\n        print('\uacbd\uace0: MOBILPAY_SKEY \ud658\uacbd\ubcc0\uc218\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc74c')\n        print('\uc0ac\uc6a9\ubc95: export MOBILPAY_SKEY=\"your_secret_key\"')\n\n    # \uac1c\ubc1c \ud658\uacbd\uc5d0\uc11c\ub9cc debug=True \uc0ac\uc6a9\n    app.run(debug=(ENVIRONMENT == 'test'), host='0.0.0.0', port=5000)\n"}], "grading": {"expectations": [{"text": "skey\uac00 \ud658\uacbd\ubcc0\uc218(os.environ)\uc5d0\uc11c \ub85c\ub4dc\ub428", "passed": true, "evidence": "Line 26: MOBILPAY_SKEY = os.environ.get('MOBILPAY_SKEY') with error handling in calculate_hmac function (lines 46-47)"}, {"text": "cash_code\uac00 CN\uc73c\ub85c \uc124\uc815\ub428 (\uac04\ud3b8\uacb0\uc81c\ub294 CN + ep_code \uc870\ud569)", "passed": true, "evidence": "Line 189: 'cash_code': 'CN',  # \uac04\ud3b8\uacb0\uc81c\ub294 CN(\uc2e0\uc6a9\uce74\ub4dc) \ucf54\ub4dc \uc0ac\uc6a9"}, {"text": "ep_code\uac00 KKO(\uce74\uce74\uc624\ud398\uc774)\ub85c \uc124\uc815\ub428", "passed": true, "evidence": "Line 204: 'ep_code': 'KKO',  # \uce74\uce74\uc624\ud398\uc774 \ucf54\ub4dc"}, {"text": "amount.total\uc774 15000\uc73c\ub85c \uc124\uc815\ub428", "passed": true, "evidence": "Line 100: input type=\"text\" id=\"amount\" value=\"15000\" readonly and line 198: 'total': amount, where amount defaults to 15000"}, {"text": "product_name\uc774 \ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5\uc73c\ub85c \uc124\uc815\ub428", "passed": true, "evidence": "Line 96: input type=\"text\" id=\"productName\" value=\"\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5\" readonly and line 163: product_name = data.get('product_name', '\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5')"}, {"text": "API \uc5d4\ub4dc\ud3ec\uc778\ud2b8\uac00 /MUP/api/registration \uc73c\ub85c \uc815\ud655\ud568", "passed": true, "evidence": "Line 212: url = f'{BASE_URL}/MUP/api/registration'"}, {"text": "\ud14c\uc2a4\ud2b8/\uc6b4\uc601 \ud638\uc2a4\ud2b8 \ubd84\uae30 \ub85c\uc9c1\uc774 \uc788\uc74c", "passed": true, "evidence": "Lines 31-34: if ENVIRONMENT == 'production': BASE_URL = 'https://mup.mobilians.co.kr' else: BASE_URL = 'https://test.mobilians.co.kr'"}]}}, {"id": "eval-2-kakaopay-python-without_skill", "prompt": "\uce74\uce74\uc624\ud398\uc774 \uac04\ud3b8\uacb0\uc81c\ub97c MOBILPAY\ub85c \uc5f0\ub3d9\ud558\uace0 \uc2f6\uc2b5\ub2c8\ub2e4. Python(Flask)\uc73c\ub85c \uac70\ub798\ub4f1\ub85d \uc694\uccad \ucf54\ub4dc\ub97c \uc791\uc131\ud574\uc8fc\uc138\uc694. \uacb0\uc81c \uae08\uc561\uc740 15000\uc6d0\uc774\uace0 \uc0c1\ud488\uba85\uc740 '\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5'\uc785\ub2c8\ub2e4.", "eval_id": 2, "outputs": [{"name": "payment-app.py", "type": "text", "content": "\"\"\"\nMOBILPAY Kakao Pay Integration - Flask Application\n\uac70\ub798\ub4f1\ub85d (Payment Registration) API Example\n\"\"\"\n\nimport os\nimport json\nimport hmac\nimport hashlib\nimport requests\nfrom datetime import datetime\nfrom flask import Flask, request, jsonify\nfrom urllib.parse import urlencode\nimport logging\n\n# Configure logging\nlogging.basicConfig(level=logging.INFO)\nlogger = logging.getLogger(__name__)\n\napp = Flask(__name__)\n\n# ============================================================================\n# Configuration - MUST load from environment variables (NOT hardcoded)\n# ============================================================================\nMOBILPAY_SKEY = os.getenv('MOBILPAY_SKEY', '')  # Service Key from MOBILPAY\nMOBILPAY_SHOP_ID = os.getenv('MOBILPAY_SHOP_ID', '')  # Shop ID\nMOBILPAY_ENV = os.getenv('MOBILPAY_ENV', 'test')  # 'test' or 'prod'\n\n# Environment-specific endpoints\nif MOBILPAY_ENV == 'prod':\n    MOBILPAY_HOST = 'https://mup.mobilians.co.kr'\nelse:\n    MOBILPAY_HOST = 'https://test.mobilians.co.kr'\n\n# ============================================================================\n# HMAC Utilities (Server-side only)\n# ============================================================================\ndef generate_hmac(shop_id: str, tid: str, amount: int, skey: str) -> str:\n    \"\"\"\n    Generate HMAC signature for MOBILPAY authentication.\n\n    Args:\n        shop_id: Shop ID\n        tid: Transaction ID\n        amount: Transaction amount in KRW\n        skey: Service Key (MUST NOT be exposed to client)\n\n    Returns:\n        Base64-encoded HMAC-SHA256 signature\n    \"\"\"\n    message = f\"{shop_id}|{tid}|{amount}\"\n    signature = hmac.new(\n        skey.encode('utf-8'),\n        message.encode('utf-8'),\n        hashlib.sha256\n    ).digest()\n    import base64\n    return base64.b64encode(signature).decode('utf-8')\n\n\ndef verify_response_hmac(shop_id: str, tid: str, amount: int, response_hmac: str, skey: str) -> bool:\n    \"\"\"\n    Verify HMAC signature in payment response (server-side only).\n\n    Args:\n        shop_id: Shop ID\n        tid: Transaction ID\n        amount: Transaction amount in KRW\n        response_hmac: HMAC from payment response\n        skey: Service Key\n\n    Returns:\n        True if HMAC is valid, False otherwise\n    \"\"\"\n    generated_hmac = generate_hmac(shop_id, tid, amount, skey)\n    return hmac.compare_digest(generated_hmac, response_hmac)\n\n\n# ============================================================================\n# Payment Registration Helper\n# ============================================================================\ndef register_transaction(\n    tid: str,\n    product_name: str,\n    amount: int,\n    noti_url: str,\n    return_url: str,\n    mf_set: str = \"\"\n) -> tuple[bool, dict]:\n    \"\"\"\n    Register a transaction with MOBILPAY.\n\n    MOBILPAY \uac70\ub798\ub4f1\ub85d API - Create transaction and get payment window URL\n\n    Args:\n        tid: Unique transaction ID (format: yyyyMMddHHmmss + random)\n        product_name: Product name (\uc0c1\ud488\uba85)\n        amount: Amount in KRW (\uc6d0\ud654)\n        noti_url: Notification URL (server will receive payment result)\n        return_url: URL to return after payment window closes\n        mf_set: Payment method setting (e.g., \"KAKAOPAY\" to allow only Kakao Pay)\n\n    Returns:\n        Tuple of (success: bool, response_data: dict)\n    \"\"\"\n\n    if not MOBILPAY_SKEY or not MOBILPAY_SHOP_ID:\n        return False, {\"error\": \"MOBILPAY_SKEY and MOBILPAY_SHOP_ID must be configured\"}\n\n    # Generate HMAC signature (server-side)\n    hmac_value = generate_hmac(MOBILPAY_SHOP_ID, tid, amount, MOBILPAY_SKEY)\n\n    # Prepare registration parameters\n    registration_params = {\n        'shop_id': MOBILPAY_SHOP_ID,\n        'tid': tid,\n        'moid': tid,  # Merchant Order ID (same as tid)\n        'goods': product_name,\n        'amount': amount,\n        'ret_url': return_url,\n        'noti_url': noti_url,\n        'hcc': hmac_value,\n        'mf_set': mf_set,  # Restrict to Kakao Pay only\n        'charset': 'utf-8'\n    }\n\n    try:\n        # Call MOBILPAY registration API\n        url = f\"{MOBILPAY_HOST}/MUP/api/registration\"\n        response = requests.post(\n            url,\n            data=registration_params,\n            timeout=10\n        )\n        response.raise_for_status()\n\n        # Parse response\n        response_data = response.json() if response.headers.get('content-type') == 'application/json' else {\n            'raw_response': response.text\n        }\n\n        if response.status_code == 200:\n            logger.info(f\"Transaction registered: tid={tid}, amount={amount}\")\n            return True, response_data\n        else:\n            logger.error(f\"Registration failed: {response.status_code} - {response.text}\")\n            return False, {\"error\": response.text}\n\n    except requests.exceptions.RequestException as e:\n        logger.error(f\"API call failed: {str(e)}\")\n        return False, {\"error\": str(e)}\n\n\n# ============================================================================\n# Flask Routes\n# ============================================================================\n\n@app.route('/payment/init', methods=['POST'])\ndef init_payment():\n    \"\"\"\n    Initialize payment - Register transaction and return payment window URL.\n\n    Request body:\n    {\n        \"product_name\": \"\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5\",\n        \"amount\": 15000,\n        \"return_url\": \"http://localhost:5000/payment/result\"\n    }\n    \"\"\"\n    try:\n        data = request.get_json()\n\n        product_name = data.get('product_name', '\uc0c1\ud488\uba85')\n        amount = int(data.get('amount', 0))\n        return_url = data.get('return_url', 'http://localhost:5000/payment/result')\n\n        # Validate input\n        if amount <= 0:\n            return jsonify({\"error\": \"Invalid amount\"}), 400\n\n        # Generate unique transaction ID\n        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')\n        import random\n        random_suffix = str(random.randint(10000, 99999))\n        tid = f\"{timestamp}{random_suffix}\"\n\n        # Notification URL (where MOBILPAY sends payment result)\n        noti_url = data.get('noti_url', 'http://localhost:5000/payment/notify')\n\n        # Register transaction with MOBILPAY\n        success, result = register_transaction(\n            tid=tid,\n            product_name=product_name,\n            amount=amount,\n            noti_url=noti_url,\n            return_url=return_url,\n            mf_set='KAKAOPAY'  # Restrict payment method to Kakao Pay\n        )\n\n        if success:\n            # Build payment window URL\n            payment_params = {\n                'shop_id': MOBILPAY_SHOP_ID,\n                'tid': tid,\n            }\n            payment_window_url = f\"{MOBILPAY_HOST}/MUP/payment?\" + urlencode(payment_params)\n\n            return jsonify({\n                \"success\": True,\n                \"tid\": tid,\n                \"amount\": amount,\n                \"product_name\": product_name,\n                \"payment_window_url\": payment_window_url,\n                \"registration_response\": result\n            }), 200\n        else:\n            return jsonify({\n                \"success\": False,\n                \"error\": \"Transaction registration failed\",\n                \"details\": result\n            }), 400\n\n    except Exception as e:\n        logger.error(f\"Error in init_payment: {str(e)}\")\n        return jsonify({\"error\": str(e)}), 500\n\n\n@app.route('/payment/notify', methods=['POST'])\ndef payment_notify():\n    \"\"\"\n    Notification endpoint - MOBILPAY sends payment result here.\n\n    IMPORTANT:\n    - This MUST be called from MOBILPAY server (not from client)\n    - Use tid to ensure idempotency (prevent duplicate processing)\n    - Verify HMAC signature for integrity\n    - This endpoint MUST be publicly accessible from MOBILPAY servers\n    \"\"\"\n    try:\n        # Get payment result from MOBILPAY\n        tid = request.form.get('tid')\n        amount = int(request.form.get('amount', 0))\n        approval_no = request.form.get('approval_no', '')\n        result_code = request.form.get('result_code', '')\n        result_msg = request.form.get('result_msg', '')\n        hmac_value = request.form.get('hcc', '')\n\n        logger.info(f\"Payment notification received: tid={tid}, result_code={result_code}\")\n\n        # Verify HMAC signature (CRITICAL for security)\n        if not verify_response_hmac(MOBILPAY_SHOP_ID, tid, amount, hmac_value, MOBILPAY_SKEY):\n            logger.error(f\"HMAC verification failed for tid={tid}\")\n            return jsonify({\"error\": \"HMAC verification failed\"}), 403\n\n        # Check result code\n        if result_code != '0000':  # 0000 = success\n            logger.warning(f\"Payment failed: {result_msg}\")\n            return jsonify({\n                \"success\": False,\n                \"error\": result_msg\n            }), 200\n\n        # Check for duplicate processing using tid (idempotency)\n        # In production, store tid in database and skip if already processed\n        logger.info(f\"Idempotency check for tid={tid}\")\n        # if is_tid_processed(tid):\n        #     logger.info(f\"tid={tid} already processed, skipping\")\n        #     return jsonify({\"success\": True}), 200\n\n        # MAIN PAYMENT PROCESSING LOGIC\n        # In production, this is where you:\n        # 1. Update order status in database\n        # 2. Provide service/product to customer\n        # 3. Send confirmation email\n        # 4. Log transaction\n        logger.info(f\"Processing payment: tid={tid}, amount={amount}, approval_no={approval_no}\")\n\n        # Example: Store transaction\n        # store_transaction(tid, amount, approval_no)\n\n        # Return success to MOBILPAY\n        return jsonify({\n            \"success\": True,\n            \"message\": \"Payment processed successfully\",\n            \"tid\": tid\n        }), 200\n\n    except Exception as e:\n        logger.error(f\"Error in payment_notify: {str(e)}\")\n        return jsonify({\"error\": str(e)}), 500\n\n\n@app.route('/payment/result', methods=['GET', 'POST'])\ndef payment_result():\n    \"\"\"\n    Return page after payment window closes.\n\n    User is redirected here after payment window closes.\n    Payment result should be confirmed via /payment/notify (server-to-server).\n    \"\"\"\n    tid = request.args.get('tid') or request.form.get('tid')\n\n    return jsonify({\n        \"message\": \"Payment window closed\",\n        \"tid\": tid,\n        \"note\": \"Actual payment result will be sent to /payment/notify endpoint\"\n    }), 200\n\n\n# ============================================================================\n# Quick Test Route\n# ============================================================================\n\n@app.route('/payment/test', methods=['GET'])\ndef test_payment():\n    \"\"\"\n    Test endpoint - Initialize a test payment for \ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5 (15000 KRW).\n\n    Usage: GET http://localhost:5000/payment/test\n    \"\"\"\n    return jsonify({\n        \"message\": \"Test payment initialization\",\n        \"instructions\": \"POST to /payment/init with: {\\\"product_name\\\": \\\"\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5\\\", \\\"amount\\\": 15000}\",\n        \"example_curl\": 'curl -X POST http://localhost:5000/payment/init -H \"Content-Type: application/json\" -d \\'{\"product_name\": \"\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5\", \"amount\": 15000}\\''\n    }), 200\n\n\n# ============================================================================\n# Error Handlers\n# ============================================================================\n\n@app.errorhandler(404)\ndef not_found(error):\n    return jsonify({\"error\": \"Endpoint not found\"}), 404\n\n\n@app.errorhandler(500)\ndef server_error(error):\n    return jsonify({\"error\": \"Internal server error\"}), 500\n\n\n# ============================================================================\n# Main\n# ============================================================================\n\nif __name__ == '__main__':\n    # Verify configuration\n    if not MOBILPAY_SKEY or not MOBILPAY_SHOP_ID:\n        print(\"\\nWARNING: MOBILPAY_SKEY and MOBILPAY_SHOP_ID environment variables must be set!\")\n        print(\"Example:\")\n        print(\"  export MOBILPAY_SKEY='your_service_key'\")\n        print(\"  export MOBILPAY_SHOP_ID='your_shop_id'\")\n        print(\"  export MOBILPAY_ENV='test'  # or 'prod'\")\n        print()\n\n    print(f\"\\nStarting Flask app...\")\n    print(f\"MOBILPAY Environment: {MOBILPAY_ENV}\")\n    print(f\"MOBILPAY Host: {MOBILPAY_HOST}\")\n    print(f\"Shop ID configured: {bool(MOBILPAY_SHOP_ID)}\")\n    print(f\"Service Key configured: {bool(MOBILPAY_SKEY)}\")\n    print()\n\n    app.run(debug=True, host='0.0.0.0', port=5000)\n"}], "grading": {"expectations": [{"text": "skey\uac00 \ud658\uacbd\ubcc0\uc218(os.environ)\uc5d0\uc11c \ub85c\ub4dc\ub428", "passed": true, "evidence": "Line 25: MOBILPAY_SKEY = os.getenv('MOBILPAY_SKEY', '') with check in verify_response_hmac function"}, {"text": "cash_code\uac00 CN\uc73c\ub85c \uc124\uc815\ub428 (\uac04\ud3b8\uacb0\uc81c\ub294 CN + ep_code \uc870\ud569)", "passed": false, "evidence": "No cash_code field found in registration_params dict (lines 114-125). Only contains shop_id, tid, moid, goods, amount, ret_url, noti_url, hcc, mf_set, charset"}, {"text": "ep_code\uac00 KKO(\uce74\uce74\uc624\ud398\uc774)\ub85c \uc124\uc815\ub428", "passed": false, "evidence": "No ep_code field found in registration_params. Uses mf_set: 'KAKAOPAY' (line 197) instead of ep_code: 'KKO' structure"}, {"text": "amount.total\uc774 15000\uc73c\ub85c \uc124\uc815\ub428", "passed": true, "evidence": "Line 174: amount = int(data.get('amount', 0)) and line 194: product_name = data.get('product_name', '\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5') with test endpoint (line 323) showing 15000"}, {"text": "product_name\uc774 \ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5\uc73c\ub85c \uc124\uc815\ub428", "passed": true, "evidence": "Line 173: product_name = data.get('product_name', '\uc0c1\ud488\uba85') and test endpoint example (line 323): '\ud504\ub9ac\ubbf8\uc5c4 \uad6c\ub3c5'"}, {"text": "API \uc5d4\ub4dc\ud3ec\uc778\ud2b8\uac00 /MUP/api/registration \uc73c\ub85c \uc815\ud655\ud568", "passed": true, "evidence": "Line 129: url = f\"{MOBILPAY_HOST}/MUP/api/registration\""}, {"text": "\ud14c\uc2a4\ud2b8/\uc6b4\uc601 \ud638\uc2a4\ud2b8 \ubd84\uae30 \ub85c\uc9c1\uc774 \uc788\uc74c", "passed": true, "evidence": "Lines 30-33: if MOBILPAY_ENV == 'prod': MOBILPAY_HOST = 'https://mup.mobilians.co.kr' else: MOBILPAY_HOST = 'https://test.mobilians.co.kr'"}]}}, {"id": "eval-3-code-review-with_skill", "prompt": "\uae30\uc874 MOBILPAY \uacb0\uc81c \uc5f0\ub3d9 \ucf54\ub4dc\ub97c \ub9ac\ubdf0\ud574\uc8fc\uc138\uc694. \ubcf4\uc548\uc0c1 \ubb38\uc81c\uac00 \uc788\ub294\uc9c0 \ud655\uc778\ud574\uc8fc\uc138\uc694.", "eval_id": 3, "outputs": [{"name": "review.md", "type": "text", "content": "# MOBILPAY \uacb0\uc81c \uc5f0\ub3d9 \ucf54\ub4dc \ubcf4\uc548 \ub9ac\ubdf0\n\n## \uac80\ud1a0 \ub300\uc0c1 \ucf54\ub4dc\n\n```javascript\nconst SKEY = 'my_secret_key_123';\napp.post('/payment/start', (req, res) => {\n  const data = { sid: '000730010001', cash_code: 'MC', product_name: '\ud14c\uc2a4\ud2b8', trade_id: 'order_1', site_url: 'mysite.com', ok_url: 'http://mysite.com/ok', amount: { total: 1000 } };\n  fetch('https://mup.mobilians.co.kr/MUP/api/registration', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) }).then(r => r.json()).then(d => res.json(d));\n});\napp.post('/payment/noti', (req, res) => {\n  const {code, amount} = req.body;\n  if(code === '0000') { updateOrder(req.body.trade_id); res.send('<html><body>SUCCESS</body></html>'); }\n});\n```\n\n---\n\n## \ubc1c\uacac\ub41c \ubcf4\uc548 \ubb38\uc81c\n\n### 1. \u26a0\ufe0f **\uc2ec\uac01: skey \ud558\ub4dc\ucf54\ub529 (\ubcf4\uc548 \uc704\ubc18)**\n\n**\ubb38\uc81c\uc810:**\n```javascript\nconst SKEY = 'my_secret_key_123';\n```\n\n- `skey`\uac00 \uc18c\uc2a4 \ucf54\ub4dc\uc5d0 **\ud3c9\ubb38\uc73c\ub85c \ud558\ub4dc\ucf54\ub529**\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4.\n- \uc774\ub294 MOBILPAY \ubcf4\uc548 \uaddc\uce59 **1\ubc88 \uc704\ubc18**: \"skey\ub294 \uc808\ub300 \ud074\ub77c\uc774\uc5b8\ud2b8(\ud504\ub860\ud2b8\uc5d4\ub4dc, \ube0c\ub77c\uc6b0\uc800) \ucf54\ub4dc\uc5d0 \ud558\ub4dc\ucf54\ub529\ud558\uac70\ub098 \ub178\ucd9c\ud558\uc9c0 \ub9c8\uc138\uc694. \ubc18\ub4dc\uc2dc \ud658\uacbd\ubcc0\uc218\ub098 \uc11c\ubc84 \uc124\uc815 \ud30c\uc77c\uc5d0\uc11c \ub85c\ub4dc\ud574\uc57c \ud569\ub2c8\ub2e4.\"\n- GitHub, \ube4c\ub4dc \uc544\ud2f0\ud329\ud2b8 \ub4f1\uc5d0 \uc720\ucd9c\ub418\uba74 \ubaa8\ub4e0 \uac70\ub798\uac00 \uc704\uc870\ub420 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n\n**\ucc38\uace0 \ubb38\uc11c:**\n- SKILL.md \ubcf4\uc548 \uaddc\uce59 1\ubc88 (skey \ubcf4\ud638)\n- `/md/api/hmac.md` (page 5): \"skey\ub294 HMAC \uacc4\uc0b0\uc5d0 \uc0ac\uc6a9\ub418\ub294 \ube44\ubc00\ud0a4\uc785\ub2c8\ub2e4. \uc808\ub300 \ud074\ub77c\uc774\uc5b8\ud2b8(\ud504\ub860\ud2b8\uc5d4\ub4dc) \ucf54\ub4dc\uc5d0 \ud3ec\ud568\ud558\uc9c0 \ub9c8\uc138\uc694.\"\n\n**\uad8c\uc7a5 \uc218\uc815:**\n```javascript\nconst SKEY = process.env.MOBILPAY_SKEY; // \ud658\uacbd\ubcc0\uc218\uc5d0\uc11c \ub85c\ub4dc\nif (!SKEY) {\n  throw new Error('MOBILPAY_SKEY \ud658\uacbd\ubcc0\uc218\uac00 \uc124\uc815\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.');\n}\n```\n\n---\n\n### 2. \u26a0\ufe0f **\uc2ec\uac01: HMAC \uac80\uc99d \ub204\ub77d**\n\n**\ubb38\uc81c\uc810:**\n- \uac70\ub798\ub4f1\ub85d(`/payment/start`)\uacfc noti_url \ud578\ub4e4\ub7ec(`/payment/noti`) \ubaa8\ub450\uc5d0\uc11c **HMAC \uac80\uc99d\uc774 \uc804\ud600 \uad6c\ud604\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4.**\n- MOBILPAY\ub294 \uac70\ub798 \ub370\uc774\ud130\uc758 \ubb34\uacb0\uc131 \uac80\uc99d\uc744 \uc704\ud574 HMAC-SHA256\uc744 \uc0ac\uc6a9\ud569\ub2c8\ub2e4.\n- HMAC \uac80\uc99d \uc5c6\uc774\ub294 **\uc911\uac04\uc790 \uacf5\uaca9(MITM)\uc73c\ub85c \uac70\ub798 \ub370\uc774\ud130\uac00 \ubcc0\uc870**\ub420 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n\n**\ucc38\uace0 \ubb38\uc11c:**\n- SKILL.md \ubcf4\uc548 \uaddc\uce59 2\ubc88: \"HMAC \ubb34\uacb0\uc131 \uac80\uc99d\uc740 \ubc18\ub4dc\uc2dc \ubc31\uc5d4\ub4dc \uc11c\ubc84\uc5d0\uc11c\ub9cc \uc218\ud589\ud569\ub2c8\ub2e4.\"\n- `/md/api/registration.md` (page 373-381): \uac70\ub798\ub4f1\ub85d \uc751\ub2f5\uc758 HMAC \uac80\uc99d \ud544\uc694\n- `/md/api/hmac.md`: HMAC \uba54\uc2dc\uc9c0 \uad6c\uc131\uacfc \uac80\uc99d \ubc29\ubc95 \uc124\uba85\n- `/md/guides/noti-url.md` (page 82-91): noti_url \ud578\ub4e4\ub7ec\uc758 HMAC \uac80\uc99d \ud544\uc218\n\n**\uac70\ub798\ub4f1\ub85d \uc751\ub2f5\uc5d0\uc11c HMAC \uac80\uc99d \ud544\uc694:**\n```javascript\n// \uc751\ub2f5\uc5d0\uc11c hmac \uac12\uc744 \ubc1b\uc544 \uac80\uc99d\ud574\uc57c \ud568\nconst registrationHmac = response.hmac;\nconst storedTimeStamp = response.time_stamp; // \uc751\ub2f5\uc5d0\uc11c \ubc1b\uc740 \uac12\nconst hmacMessage = amount + ok_url + trade_id + storedTimeStamp;\nconst calculatedHmac = crypto.createHmac('sha256', SKEY)\n  .update(hmacMessage, 'utf8').digest('base64');\nif (calculatedHmac !== registrationHmac) {\n  throw new Error('HMAC \uac80\uc99d \uc2e4\ud328: \uac70\ub798 \ub370\uc774\ud130\uac00 \ubcc0\uc870\ub418\uc5c8\uc744 \uc218 \uc788\uc2b5\ub2c8\ub2e4.');\n}\n```\n\n**noti_url \ud578\ub4e4\ub7ec\uc758 HMAC \uac80\uc99d \ud544\uc218:**\n```javascript\n// \uc694\uccad\uc5d0\uc11c \ubc1b\uc740 hmac \uac12 \uac80\uc99d\nconst { code, amount, hmac, trade_id } = req.body;\nconst storedTimeStamp = getStoredTimeStampFromDB(trade_id);\nconst hmacMessage = amount + 'https://www.example.com/payment/noti' + trade_id + storedTimeStamp;\nconst calculatedHmac = crypto.createHmac('sha256', SKEY)\n  .update(hmacMessage, 'utf8').digest('base64');\nif (calculatedHmac !== hmac) {\n  console.error('HMAC \uac80\uc99d \uc2e4\ud328');\n  return res.send('FAIL');\n}\n```\n\n---\n\n### 3. \u26a0\ufe0f **\uc2ec\uac01: noti_url \uc751\ub2f5 \ud615\uc2dd \uc624\ub958**\n\n**\ubb38\uc81c\uc810:**\n```javascript\nres.send('<html><body>SUCCESS</body></html>');\n```\n\n- noti_url \uc751\ub2f5\uc774 **HTML \ucf54\ub4dc\ub97c \ud3ec\ud568**\ud558\uace0 \uc788\uc2b5\ub2c8\ub2e4.\n- \ubcf4\uc548 \uaddc\uce59 5\ubc88 \uc704\ubc18: \"noti_url \ud578\ub4e4\ub7ec\uc758 \uc751\ub2f5\uc740 HTML\uc774\ub098 \uc18c\uc2a4\ucf54\ub4dc \uc5c6\uc774 SUCCESS \ub610\ub294 FAIL \ubb38\uc790\uc5f4\ub9cc \ucd9c\ub825\ud574\uc57c \ud569\ub2c8\ub2e4.\"\n- MOBILPAY \uc2dc\uc2a4\ud15c\uc774 HTML\uc744 \ud30c\uc2f1\ud558\uc9c0 \ubabb\ud574 \ubc18\ubcf5 \ud638\ucd9c\uc774 \ubc1c\uc0dd\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n\n**\ucc38\uace0 \ubb38\uc11c:**\n- SKILL.md \ubcf4\uc548 \uaddc\uce59 5\ubc88: \"SUCCESS/FAIL \ucd9c\ub825 \uaddc\uce59\"\n- `/md/guides/noti-url.md` (page 19): \"SUCCESS/FAIL \ucd9c\ub825\uc740 \uc18c\uc2a4\ucf54\ub4dc\ub098 HTML \ucf54\ub4dc \uc5c6\uc774 **\ud574\ub2f9 \ubb38\uc790\ub9cc** \ud398\uc774\uc9c0\uc0c1\uc5d0 \ucd9c\ub825\ud574\uc57c \ud569\ub2c8\ub2e4.\"\n\n**\uad8c\uc7a5 \uc218\uc815:**\n```javascript\nres.send('SUCCESS'); // HTML \ucf54\ub4dc \uc81c\uac70, \ubb38\uc790\ub9cc \ucd9c\ub825\n```\n\n---\n\n### 4. \u26a0\ufe0f **\uc911\uc694: noti_url\uc5d0 \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4 \ub85c\uc9c1 \ub204\ub77d**\n\n**\ubb38\uc81c\uc810:**\n- noti_url\uc774 \ucd5c\ub300 20\ud68c \ubc18\ubcf5 \ud638\ucd9c\ub418\ub294\ub370\ub3c4, \uc911\ubcf5 \uac70\ub798\ub97c \ubc29\uc5b4\ud558\ub294 \ub85c\uc9c1\uc774 \uc5c6\uc2b5\ub2c8\ub2e4.\n- \ud604\uc7ac \ucf54\ub4dc\ub294 \ub9e4 \ud638\ucd9c\ub9c8\ub2e4 `updateOrder()`\ub97c \uc2e4\ud589\ud558\ubbc0\ub85c **\uc11c\ube44\uc2a4\uac00 \uc911\ubcf5 \uc81c\uacf5**\ub429\ub2c8\ub2e4.\n- SKILL.md \ubcf4\uc548 \uaddc\uce59 3\ubc88 \uc704\ubc18: \"noti_url\uc740 SUCCESS\ub97c \uc218\uc2e0\ud560 \ub54c\uae4c\uc9c0 \ucd5c\ub300 20\ud68c \ubc18\ubcf5 \ud638\ucd9c\ub429\ub2c8\ub2e4. \uc911\ubcf5 \uc11c\ube44\uc2a4 \uc81c\uacf5\uc744 \ubc29\uc9c0\ud558\uae30 \uc704\ud574 tid \ub610\ub294 trade_id \uae30\ubc18 \uc911\ubcf5 \ucc98\ub9ac \ubc29\uc5b4 \ub85c\uc9c1\uc744 \ubc18\ub4dc\uc2dc \uad6c\ud604\ud574\uc57c \ud569\ub2c8\ub2e4.\"\n\n**\ucc38\uace0 \ubb38\uc11c:**\n- SKILL.md \ubcf4\uc548 \uaddc\uce59 3\ubc88: \uc911\ubcf5 \ucc98\ub9ac \ubc29\uc5b4 \ub85c\uc9c1 \ud544\uc218\n- `/md/guides/noti-url.md` (page 29-33): \"SUCCESS\ub97c \ucd9c\ub825\ud558\uc9c0 \uc54a\uc73c\uba74 noti_url \ud398\uc774\uc9c0\ub97c **\ucd5c\ub300 20\ud68c** \ubc18\ubcf5 \ud638\ucd9c\ud569\ub2c8\ub2e4. ... \ucc98\ub9ac \uc644\ub8cc\ub41c \uc911\ubcf5 \uac70\ub798\uac74\uc774 \uc7ac\ud638\ucd9c\ub420 \uacbd\uc6b0 **SUCCESS\ub97c \ucd9c\ub825**\ud558\ub294 \ubc29\uc5b4 \ub85c\uc9c1\uc744 \ubc18\ub4dc\uc2dc \uad6c\ud604\ud574\uc57c \ud569\ub2c8\ub2e4.\"\n\n**\uad8c\uc7a5 \uc218\uc815:**\n```javascript\napp.post('/payment/noti', (req, res) => {\n  const { code, amount, trade_id } = req.body;\n\n  // 1. code=0000 \ud655\uc778\n  if (code !== '0000') {\n    return res.send('FAIL');\n  }\n\n  // 2. \uc911\ubcf5 \ucc98\ub9ac \ud655\uc778 (\ud575\uc2ec!)\n  if (isAlreadyProcessed(trade_id)) {\n    // \uc774\ubbf8 \ucc98\ub9ac\ub41c \uac70\ub798 \u2192 SUCCESS \ucd9c\ub825\ud558\uc5ec \ubc18\ubcf5 \ud638\ucd9c \uc911\uc9c0\n    return res.send('SUCCESS');\n  }\n\n  // 3. \uacb0\uc81c \ucc98\ub9ac\n  updateOrder(trade_id);\n  markAsProcessed(trade_id); // \ucc98\ub9ac \uc644\ub8cc \ud50c\ub798\uadf8 \uc800\uc7a5\n  res.send('SUCCESS');\n});\n```\n\n---\n\n### 5. \u26a0\ufe0f **\uc911\uc694: \uae08\uc561 \uac80\uc99d \ub204\ub77d**\n\n**\ubb38\uc81c\uc810:**\n- noti_url \ud578\ub4e4\ub7ec\uc5d0\uc11c **\ucd5c\ucd08 \uc694\uccad \uae08\uc561\uacfc \uc751\ub2f5 \uae08\uc561\uc744 \ube44\uad50\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.**\n- \uacf5\uaca9\uc790\uac00 \uc694\uccad \uae08\uc561\uacfc \ub2e4\ub978 \uae08\uc561\uc73c\ub85c \uacb0\uc81c\ub97c \uc704\uc870\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n- MOBILPAY \uba85\uc138\uc5d0\uc11c \ud544\uc218 \uac80\uc99d \ud56d\ubaa9\uc785\ub2c8\ub2e4.\n\n**\ucc38\uace0 \ubb38\uc11c:**\n- `/md/guides/noti-url.md` (page 21-27): \"SUCCESS \ucd9c\ub825 \uc804 \ud544\uc218 \ud655\uc778 \ud56d\ubaa9\" \uc911 \"amount: \ucd5c\ucd08 \uc694\uccad\ud55c \uae08\uc561\uacfc \ub3d9\uc77c\ud55c\uc9c0 **\ubc18\ub4dc\uc2dc** \ud655\uc778\"\n- `/md/api/auth-response.md` (page 173-182): \uc751\ub2f5 \ucc98\ub9ac \uc2dc \ud544\uc218 \uac80\uc99d \ud56d\ubaa9\n\n**\uad8c\uc7a5 \uc218\uc815:**\n```javascript\n// \uae08\uc561 \uac80\uc99d\nconst originalAmount = getOriginalAmountFromDB(trade_id);\nif (String(originalAmount) !== String(amount)) {\n  console.error('\uae08\uc561 \ubd88\uc77c\uce58:', originalAmount, '!=', amount);\n  return res.send('FAIL');\n}\n```\n\n---\n\n### 6. \u26a0\ufe0f **\uc911\uc694: IP \uac80\uc99d \ub204\ub77d**\n\n**\ubb38\uc81c\uc810:**\n- noti_url \ud578\ub4e4\ub7ec\uac00 KG\ubaa8\ube4c\ub9ac\uc5b8\uc2a4 \uacb0\uc81c\uc11c\ubc84\uc758 IP\uc5d0\uc11c\ub9cc \ud638\ucd9c\ub418\ub294\uc9c0 \uac80\uc99d\ud558\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.\n- \uacf5\uaca9\uc790\uac00 \uc9c1\uc811 noti_url\uc744 \ud638\ucd9c\ud558\uc5ec \uacb0\uc81c\ub97c \uc704\uc870\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n- MOBILPAY \uba85\uc138\uc5d0\uc11c \ud544\uc218 \uac80\uc99d \ud56d\ubaa9\uc785\ub2c8\ub2e4.\n\n**\ucc38\uace0 \ubb38\uc11c:**\n- `/md/guides/noti-url.md` (page 21-27): \"SUCCESS \ucd9c\ub825 \uc804 \ud544\uc218 \ud655\uc778 \ud56d\ubaa9\" \uc911 \"IP: noti_url \ud398\uc774\uc9c0 \ud638\ucd9c IP\uac00 KG\ubaa8\ube4c\ub9ac\uc5b8\uc2a4 \uacb0\uc81c\uc11c\ubc84\uad70\uc778\uc9c0 \ud655\uc778\"\n- `/md/guides/noti-url.md` (page 45-50): \ud5c8\uc6a9\ub41c KG\ubaa8\ube4c\ub9ac\uc5b8\uc2a4 IP \ubaa9\ub85d\n\n**\uad8c\uc7a5 \uc218\uc815:**\n```javascript\nconst ALLOWED_IPS = [\n  '175.158.12.1',   // \uba54\uc778 NOTI \uc11c\ubc84\n  '175.158.12.2',   // \ud14c\uc2a4\ud2b8 NOTI \uc11c\ubc84\n  '116.127.121.132' // \ubc31\uc5c5 NOTI \uc11c\ubc84\n];\n\nconst clientIP = (req.ip || req.connection.remoteAddress || '')\n  .replace('::ffff:', '');\nif (!ALLOWED_IPS.includes(clientIP)) {\n  console.error('\ud5c8\uc6a9\ub418\uc9c0 \uc54a\uc740 IP:', clientIP);\n  return res.send('FAIL');\n}\n```\n\n---\n\n### 7. \u26a0\ufe0f **\uc911\uc694: ok_url \ud30c\ub77c\ubbf8\ud130 \ud504\ub85c\ud1a0\ucf5c \uc624\ub958**\n\n**\ubb38\uc81c\uc810:**\n```javascript\nok_url: 'http://mysite.com/ok'\n```\n\n- `ok_url`\uc774 **HTTP \ud504\ub85c\ud1a0\ucf5c**\ub85c \uc124\uc815\ub418\uc5b4 \uc788\uc2b5\ub2c8\ub2e4.\n- \uacb0\uc81c \uacb0\uacfc\uac00 \uc554\ud638\ud654\ub418\uc9c0 \uc54a\uc740 \ucc44\ub85c \uc804\uc1a1\ub429\ub2c8\ub2e4.\n- MOBILPAY \uba85\uc138\uc5d0\uc11c\ub294 HTTPS \uad8c\uc7a5\uc785\ub2c8\ub2e4.\n\n**\uad8c\uc7a5 \uc218\uc815:**\n```javascript\nok_url: 'https://mysite.com/ok' // HTTP \u2192 HTTPS\ub85c \ubcc0\uacbd\n```\n\n---\n\n### 8. \u26a0\ufe0f **\uc911\uc694: \uc5d0\ub7ec \uc751\ub2f5 \ucc98\ub9ac \ub204\ub77d**\n\n**\ubb38\uc81c\uc810:**\n- \uac70\ub798\ub4f1\ub85d \uc2e4\ud328 \uc2dc(code \u2260 0000) \uc5d0\ub7ec \ucc98\ub9ac\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.\n- API \ud638\ucd9c \uc2e4\ud328 \uc2dc(\ub124\ud2b8\uc6cc\ud06c \uc624\ub958 \ub4f1) \uc608\uc678 \ucc98\ub9ac\uac00 \uc5c6\uc2b5\ub2c8\ub2e4.\n- \ud074\ub77c\uc774\uc5b8\ud2b8\uc5d0\uac8c \uc6d0\ubcf8 API \uc751\ub2f5\uc744 \uadf8\ub300\ub85c \uc804\ub2ec\ud558\ubbc0\ub85c \ubcf4\uc548 \uc815\ubcf4\uac00 \ub178\ucd9c\ub420 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n\n**\uad8c\uc7a5 \uc218\uc815:**\n```javascript\napp.post('/payment/start', (req, res) => {\n  try {\n    const data = {\n      sid: '000730010001',\n      cash_code: 'MC',\n      product_name: '\ud14c\uc2a4\ud2b8',\n      trade_id: 'order_1',\n      site_url: 'mysite.com',\n      ok_url: 'https://mysite.com/ok', // HTTP \u2192 HTTPS\n      amount: { total: 1000 }\n    };\n\n    fetch('https://mup.mobilians.co.kr/MUP/api/registration', {\n      method: 'POST',\n      headers: {'Content-Type': 'application/json'},\n      body: JSON.stringify(data)\n    })\n    .then(r => r.json())\n    .then(d => {\n      if (d.code !== '0000') {\n        console.error('\uac70\ub798\ub4f1\ub85d \uc2e4\ud328:', d.message);\n        return res.status(400).json({ error: '\uac70\ub798 \ub4f1\ub85d \uc2e4\ud328' });\n      }\n      res.json({ tid: d.tid, pay_url: d.pay_url }); // \ud544\uc694\ud55c \uc815\ubcf4\ub9cc \ubc18\ud658\n    })\n    .catch(err => {\n      console.error('\uac70\ub798\ub4f1\ub85d \uc694\uccad \uc624\ub958:', err);\n      res.status(500).json({ error: '\uc2dc\uc2a4\ud15c \uc624\ub958' });\n    });\n  } catch (err) {\n    console.error('\uc624\ub958:', err);\n    res.status(500).json({ error: '\uc2dc\uc2a4\ud15c \uc624\ub958' });\n  }\n});\n```\n\n---\n\n### 9. \u26a0\ufe0f **\uad8c\uc7a5: noti_url\uc774 \uad6c\ud604\ub418\uc9c0 \uc54a\uc558\uc5b4\uc57c \ud568**\n\n**\ubb38\uc81c\uc810:**\n- \ud604\uc7ac \ucf54\ub4dc\uc5d0\uc11c\ub294 `/payment/start`\uc5d0\uc11c `noti_url`\uc744 \ub4f1\ub85d\ud558\uc9c0 \uc54a\uace0 \uc788\uc2b5\ub2c8\ub2e4.\n- \uadf8\ub7f0\ub370 \ubcc4\ub3c4 `/payment/noti` \ud578\ub4e4\ub7ec\uac00 \uc788\ub294 \uac83\uc73c\ub85c \ubcf4\uc544, \uc2e4\uc81c \uc6b4\uc601 \ucf54\ub4dc\uc5d0\uc11c\ub294 noti_url\uc744 \ub4f1\ub85d\ud560 \uc758\ub3c4\uac00 \uc788\ub294 \uac83\uc73c\ub85c \ubcf4\uc785\ub2c8\ub2e4.\n- \uac70\ub798\ub4f1\ub85d \uc694\uccad\uc5d0 noti_url\uc744 \uba85\uc2dc\uc801\uc73c\ub85c \ud3ec\ud568\ud574\uc57c \ud569\ub2c8\ub2e4.\n\n**\uad8c\uc7a5 \uc218\uc815:**\n```javascript\nconst data = {\n  // ... \uae30\uc874 \ud544\ub4dc ...\n  noti_url: 'https://mysite.com/payment/noti', // noti_url \ucd94\uac00\n  noti_email: 'dev@example.com' // \uc120\ud0dd\uc0ac\ud56d\n};\n```\n\n---\n\n## \uc885\ud569 \ubcf4\uc548 \ud3c9\uac00\n\n| \ud56d\ubaa9 | \uc2ec\uac01\ub3c4 | \uc0c1\ud0dc |\n|------|--------|------|\n| skey \ud558\ub4dc\ucf54\ub529 | \ud83d\udd34 \uc2ec\uac01 | \uc2e4\ud328 |\n| HMAC \uac80\uc99d \ubd80\uc7ac | \ud83d\udd34 \uc2ec\uac01 | \uc2e4\ud328 |\n| noti_url \uc751\ub2f5 \ud615\uc2dd \uc624\ub958 | \ud83d\udd34 \uc2ec\uac01 | \uc2e4\ud328 |\n| \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4 \ub204\ub77d | \ud83d\udfe0 \uc911\uc694 | \uc2e4\ud328 |\n| \uae08\uc561 \uac80\uc99d \ub204\ub77d | \ud83d\udfe0 \uc911\uc694 | \uc2e4\ud328 |\n| IP \uac80\uc99d \ub204\ub77d | \ud83d\udfe0 \uc911\uc694 | \uc2e4\ud328 |\n| HTTP \uc0ac\uc6a9 (HTTPS \ubbf8\uc0ac\uc6a9) | \ud83d\udfe0 \uc911\uc694 | \uc2e4\ud328 |\n| \uc5d0\ub7ec \ucc98\ub9ac \ub204\ub77d | \ud83d\udfe0 \uc911\uc694 | \uc2e4\ud328 |\n\n**\ucd5c\uc885 \uacb0\ub860: \uc774 \ucf54\ub4dc\ub294 \ud504\ub85c\ub355\uc158 \ud658\uacbd\uc5d0 \uc808\ub300 \ubc30\ud3ec\ub418\uc5b4\uc11c\ub294 \uc548 \ub429\ub2c8\ub2e4.**\n\n---\n\n## \uad8c\uc7a5 \uc870\uce58\n\n1. **\uc989\uc2dc \uc870\uce58 \ud544\uc694 (\ubc30\ud3ec \uc804 \ud544\uc218)**\n   - skey\ub97c \ud658\uacbd\ubcc0\uc218\ub85c \ubcc0\uacbd\n   - HMAC \uac80\uc99d \ub85c\uc9c1 \uad6c\ud604\n   - noti_url \uc751\ub2f5 \ud615\uc2dd \uc218\uc815 (HTML \uc81c\uac70)\n   - \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4 \ub85c\uc9c1 \ucd94\uac00\n   - \uae08\uc561 \uac80\uc99d \ub85c\uc9c1 \ucd94\uac00\n   - IP \uac80\uc99d \ub85c\uc9c1 \ucd94\uac00\n\n2. **\ucd94\uac00 \ubcf4\uc548 \uac15\ud654**\n   - HTTP \u2192 HTTPS \ubcc0\uacbd\n   - \uc5d0\ub7ec \ucc98\ub9ac \ucd94\uac00\n   - \ub85c\uae45 \ubc0f \ubaa8\ub2c8\ud130\ub9c1 \uad6c\ud604\n   - \uc815\uae30\uc801\uc778 \ubcf4\uc548 \uac10\uc0ac\n\n3. **\ucc38\uace0 \uc790\ub8cc**\n   - SKILL.md: \ubcf4\uc548 \uaddc\uce59 1-5\ubc88, \ucf54\ub4dc \uc0dd\uc131 \uccb4\ud06c\ub9ac\uc2a4\ud2b8\n   - `/md/guides/noti-url.md`: noti_url \uad6c\ud604 \uac00\uc774\ub4dc \ubc0f \uc608\uc81c\n   - `/md/api/hmac.md`: HMAC \uac80\uc99d \uad6c\ud604 \uc608\uc81c (Node.js \ud3ec\ud568)\n   - `/md/api/auth-response.md`: \uc751\ub2f5 \ucc98\ub9ac \ubc0f \uac80\uc99d \uc608\uc81c\n\n---\n\n## \uc218\uc815\ub41c \ucf54\ub4dc \ucc38\uace0\n\n\uc804\uccb4 \uc218\uc815\ub41c \ucf54\ub4dc \uc608\uc81c\ub294 SKILL.md\uc758 noti_url.md \ucc38\uace0 \uc139\uc158(page 35-110)\uc5d0\uc11c \ud655\uc778\ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4.\n\n"}], "grading": {"expectations": [{"text": "skey \ud558\ub4dc\ucf54\ub529 \ubb38\uc81c\ub97c \uc9c0\uc801\ud568", "passed": true, "evidence": "Lines 23-42: Dedicated section '\uc2ec\uac01: skey \ud558\ub4dc\ucf54\ub529 (\ubcf4\uc548 \uc704\ubc18)' with detailed explanation of the vulnerability and recommended fix using process.env.MOBILPAY_SKEY"}, {"text": "HMAC \uac80\uc99d \ub204\ub77d\uc744 \uc9c0\uc801\ud568", "passed": true, "evidence": "Lines 46-84: Section '\uc2ec\uac01: HMAC \uac80\uc99d \ub204\ub77d' with explanation that 'HMAC \uac80\uc99d\uc774 \uc804\ud600 \uad6c\ud604\ub418\uc9c0 \uc54a\uc558\uc2b5\ub2c8\ub2e4' and provides code examples for both registration and noti_url verification"}, {"text": "noti_url \uc911\ubcf5 \ubc29\uc5b4 \ub85c\uc9c1 \ubd80\uc7ac\ub97c \uc9c0\uc801\ud568", "passed": true, "evidence": "Lines 110-142: Section '\uc2ec\uac01: noti_url\uc5d0 \uc911\ubcf5 \uac70\ub798 \ubc29\uc5b4 \ub85c\uc9c1 \ub204\ub77d' with isAlreadyProcessed() example and markAsProcessed() implementation"}, {"text": "SUCCESS \ucd9c\ub825\uc5d0 HTML\uc774 \ud3ec\ud568\ub41c \ubb38\uc81c\ub97c \uc9c0\uc801\ud568", "passed": true, "evidence": "Lines 88-106: Section '\uc2ec\uac01: noti_url \uc751\ub2f5 \ud615\uc2dd \uc624\ub958' pointing out res.send('<html><body>SUCCESS</body></html>') should be res.send('SUCCESS')"}, {"text": "\uae08\uc561 \uac80\uc99d \ub204\ub77d\uc744 \uc9c0\uc801\ud568", "passed": true, "evidence": "Lines 146-166: Section '\uc911\uc694: \uae08\uc561 \uac80\uc99d \ub204\ub77d' with getOriginalAmountFromDB() example and String comparison check"}, {"text": "\uc218\uc815\ub41c \ucf54\ub4dc \ub610\ub294 \uac1c\uc120 \ubc29\uc548\uc744 \uc81c\uc2dc\ud568", "passed": true, "evidence": "Multiple code examples provided throughout: lines 37-42 (skey fix), lines 60-84 (HMAC verification), lines 121-142 (idempotency), lines 157-165 (amount validation), lines 181-194 (IP validation)"}]}}, {"id": "eval-3-code-review-without_skill", "prompt": "\uae30\uc874 MOBILPAY \uacb0\uc81c \uc5f0\ub3d9 \ucf54\ub4dc\ub97c \ub9ac\ubdf0\ud574\uc8fc\uc138\uc694. \ubcf4\uc548\uc0c1 \ubb38\uc81c\uac00 \uc788\ub294\uc9c0 \ud655\uc778\ud574\uc8fc\uc138\uc694.", "eval_id": 3, "outputs": [{"name": "review.md", "type": "text", "content": "# MOBILPAY \uacb0\uc81c \uc5f0\ub3d9 \ucf54\ub4dc \ubcf4\uc548 \ub9ac\ubdf0\n\n## \ud83d\udd34 \uc2ec\uac01\ud55c \ubcf4\uc548 \ubb38\uc81c (Critical)\n\n### 1. **Service Key(skey) \ub178\ucd9c - \ucd5c\uc6b0\uc120 \ud574\uacb0 \ud544\uc694**\n```javascript\nconst SKEY = 'my_secret_key_123';  // \u274c \uc704\ud5d8: \ud074\ub77c\uc774\uc5b8\ud2b8 \ucf54\ub4dc\uc5d0 \ud558\ub4dc\ucf54\ub529\n```\n\n**\ubb38\uc81c:**\n- Service Key\uac00 \uc18c\uc2a4 \ucf54\ub4dc\uc5d0 \ud3c9\ubb38\uc73c\ub85c \ub178\ucd9c\ub428\n- \ubc84\uc804 \uad00\ub9ac \uc2dc\uc2a4\ud15c(Git)\uc5d0 \uc800\uc7a5\ub418\uc5b4 \uc601\uad6c\uc801\uc73c\ub85c \ub178\ucd9c\ub420 \uc218 \uc788\uc74c\n- \ud504\ub860\ud2b8\uc5d4\ub4dc\uac00 \uc811\uadfc \uac00\ub2a5\ud55c \uc704\uce58\uc5d0 \ub178\ucd9c \uac00\ub2a5\n- \ud0a4 \ud0c8\ucde8 \uc2dc \uc804\uccb4 \uacb0\uc81c \uc2dc\uc2a4\ud15c \uad8c\ud55c \uce68\ud574\n\n**\ud574\uacb0\ucc45:**\n```javascript\n// \u2705 \ud658\uacbd \ubcc0\uc218\uc5d0\uc11c \ub85c\ub4dc\nconst SKEY = process.env.MOBILPAY_SERVICE_KEY;\n\n// .env \ud30c\uc77c (Git\uc5d0\uc11c \uc81c\uc678)\nMOBILPAY_SERVICE_KEY=my_secret_key_123\n\n// .gitignore \uc124\uc815\n.env\n.env.local\n```\n\n---\n\n## \ud83d\udd34 \uc2ec\uac01\ud55c \ubcf4\uc548 \ubb38\uc81c (Critical)\n\n### 2. **\uacb0\uc81c \ub4f1\ub85d \uc694\uccad\uc5d0\uc11c skey \ubbf8\ud3ec\ud568 \ubc0f HMAC \uac80\uc99d \ubd80\uc7ac**\n\n**\ud604\uc7ac \ucf54\ub4dc \ubb38\uc81c:**\n```javascript\nconst data = {\n  sid: '000730010001',\n  cash_code: 'MC',\n  product_name: '\ud14c\uc2a4\ud2b8',\n  trade_id: 'order_1',\n  site_url: 'mysite.com',\n  ok_url: 'http://mysite.com/ok',\n  amount: { total: 1000 }\n  // \u274c skey \uc5c6\uc74c - API \uc778\uc99d \uc2e4\ud328 \uac00\ub2a5\n};\n```\n\n**\ubb38\uc81c:**\n- \uacb0\uc81c \ub4f1\ub85d(registration) API \ud638\ucd9c \uc2dc Service Key\ub97c \ud3ec\ud568\ud558\uc9c0 \uc54a\uc74c\n- HMAC \ubb34\uacb0\uc131 \uac80\uc99d \uc5c6\uc774 \uc694\uccad\uc744 \uc804\uc1a1\n- \uc11c\ubc84 \uac04 \ud1b5\uc2e0 \ubcf4\uc548 \ubbf8\ud761\n\n**\ud574\uacb0\ucc45:**\n```javascript\nconst crypto = require('crypto');\n\n// HMAC \uc0dd\uc131 \ud568\uc218\nfunction generateHmac(data, skey) {\n  const jsonStr = JSON.stringify(data);\n  return crypto\n    .createHmac('sha256', skey)\n    .update(jsonStr)\n    .digest('hex');\n}\n\n// skey \ud3ec\ud568 \ubc0f HMAC \uc11c\uba85\nconst data = {\n  sid: '000730010001',\n  cash_code: 'MC',\n  product_name: '\ud14c\uc2a4\ud2b8',\n  trade_id: 'order_1',\n  site_url: 'mysite.com',\n  ok_url: 'http://mysite.com/ok',\n  amount: { total: 1000 },\n  skey: process.env.MOBILPAY_SERVICE_KEY  // \u2705 \ucd94\uac00\n};\n\nconst hmac = generateHmac(data, process.env.MOBILPAY_SERVICE_KEY);\n\nfetch('https://mup.mobilians.co.kr/MUP/api/registration', {\n  method: 'POST',\n  headers: {\n    'Content-Type': 'application/json',\n    'Authorization': `Bearer ${hmac}`  // \u2705 HMAC \ud3ec\ud568\n  },\n  body: JSON.stringify(data)\n});\n```\n\n---\n\n## \ud83d\udd34 \uc2ec\uac01\ud55c \ubcf4\uc548 \ubb38\uc81c (Critical)\n\n### 3. **Notification URL (noti_url) \ucf5c\ubc31\uc5d0\uc11c \uba71\ub4f1\uc131 \uac80\uc99d \ubd80\uc7ac**\n\n**\ud604\uc7ac \ucf54\ub4dc:**\n```javascript\napp.post('/payment/noti', (req, res) => {\n  const {code, amount} = req.body;\n  if(code === '0000') {\n    updateOrder(req.body.trade_id);  // \u274c \uc911\ubcf5 \uc694\uccad \uc2dc \uc911\ubcf5 \ucc98\ub9ac\n    res.send('<html><body>SUCCESS</body></html>');\n  }\n});\n```\n\n**\ubb38\uc81c:**\n- MOBILPAY \uc11c\ubc84\uac00 \uac19\uc740 \uacb0\uc81c \uacb0\uacfc\ub97c \uc5ec\ub7ec \ubc88 \uc804\uc1a1\ud560 \uc218 \uc788\uc74c\n- `updateOrder()`\uac00 \uc5ec\ub7ec \ubc88 \uc2e4\ud589\ub418\uba74 \ub370\uc774\ud130 \uc624\uc5fc \ubc1c\uc0dd \uac00\ub2a5\n- \uc8fc\ubb38 \uc0c1\ud0dc\uac00 \uc5ec\ub7ec \ubc88 \ubcc0\uacbd\ub420 \uc218 \uc788\uc74c\n- \uc911\ubcf5 \ud658\ubd88 \ub4f1 \uc7ac\uc815\uc801 \uc190\uc2e4 \ubc1c\uc0dd \uac00\ub2a5\n\n**\ud574\uacb0\ucc45:**\n```javascript\n// DB\uc5d0 \ucc98\ub9ac\ub41c tid \uae30\ub85d\napp.post('/payment/noti', async (req, res) => {\n  const { code, amount, tid } = req.body;\n\n  try {\n    // \u2705 tid \uae30\ubc18 \uba71\ub4f1\uc131 \uccb4\ud06c\n    const existing = await db.checkTransactionProcessed(tid);\n    if (existing) {\n      console.log(`Already processed: ${tid}`);\n      res.send('<html><body>SUCCESS</body></html>');\n      return;\n    }\n\n    if (code === '0000') {\n      await updateOrder(req.body.trade_id);\n\n      // \u2705 \ucc98\ub9ac \uae30\ub85d \uc800\uc7a5\n      await db.recordTransaction(tid, req.body);\n\n      res.send('<html><body>SUCCESS</body></html>');\n    }\n  } catch (error) {\n    console.error('Notification processing error:', error);\n    res.status(500).send('<html><body>FAILED</body></html>');\n  }\n});\n```\n\n---\n\n## \ud83d\udfe0 \ub192\uc74c (High)\n\n### 4. **HMAC \uac80\uc99d\uc774 \uc11c\ubc84\uc0ac\uc774\ub4dc\uc5d0\uc11c \uad6c\ud604\ub418\uc9c0 \uc54a\uc74c**\n\n**\ubb38\uc81c:**\n- \ud074\ub77c\uc774\uc5b8\ud2b8 \uc751\ub2f5\uc744 \uac80\uc99d\ud558\uc9c0 \uc54a\uc74c\n- \uc704\uc870\ub41c \uacb0\uc81c \uc2b9\uc778 \uc751\ub2f5\uc774 \uc218\ub77d\ub420 \uc218 \uc788\uc74c\n- \uacb0\uc81c \ud750\ub984\uc758 \uac01 \ub2e8\uacc4\uc5d0\uc11c HMAC \uac80\uc99d \ud544\uc694\n\n**\ud574\uacb0\ucc45:**\n```javascript\n// \uacb0\uc81c \uc2b9\uc778 \uc751\ub2f5 \ucc98\ub9ac \uc2dc HMAC \uac80\uc99d\napp.post('/payment/approve', async (req, res) => {\n  const { data, hmac } = req.body;\n\n  // \u2705 \uc11c\ubc84\uc0ac\uc774\ub4dc HMAC \uac80\uc99d\n  const calculatedHmac = crypto\n    .createHmac('sha256', process.env.MOBILPAY_SERVICE_KEY)\n    .update(JSON.stringify(data))\n    .digest('hex');\n\n  if (hmac !== calculatedHmac) {\n    return res.status(401).json({ error: 'Invalid HMAC signature' });\n  }\n\n  // \uac80\uc99d \ud1b5\uacfc \ud6c4 \ucc98\ub9ac\n  await approvePayment(data);\n  res.json({ success: true });\n});\n```\n\n---\n\n## \ud83d\udfe0 \ub192\uc74c (High)\n\n### 5. **Production URL\uc5d0 \ubbfc\uac10\ud55c \ub370\uc774\ud130 \uc804\uc1a1 \uc2dc HTTPS \uac80\uc99d \ubd80\uc7ac**\n\n**\ud604\uc7ac \ucf54\ub4dc:**\n```javascript\nfetch('https://mup.mobilians.co.kr/MUP/api/registration', ...)\n```\n\n**\uad8c\uc7a5\uc0ac\ud56d:**\n```javascript\n// \u2705 Node.js\uc5d0\uc11c HTTPS \uc778\uc99d\uc11c \uac80\uc99d \uba85\uc2dc\nconst https = require('https');\nconst agent = new https.Agent({\n  rejectUnauthorized: true,  // \u2705 \uae30\ubcf8\uac12\uc774\uc9c0\ub9cc \uba85\uc2dc\uc801\uc73c\ub85c \uc124\uc815\n  ca: process.env.CA_CERT    // \ud544\uc694\uc2dc \ucee4\uc2a4\ud140 CA \uc9c0\uc815\n});\n\nfetch('https://mup.mobilians.co.kr/MUP/api/registration', {\n  agent: agent,\n  method: 'POST',\n  headers: {'Content-Type': 'application/json'},\n  body: JSON.stringify(data)\n});\n```\n\n---\n\n## \ud83d\udfe0 \ub192\uc74c (High)\n\n### 6. **trade_id \uac80\uc99d \ubd80\uc7ac - CSRF/\uacb0\uc81c \ubcc0\uc870 \uacf5\uaca9 \uac00\ub2a5**\n\n**\ud604\uc7ac \ucf54\ub4dc:**\n```javascript\nconst data = {\n  trade_id: 'order_1',  // \u274c \uc0ac\uc6a9\uc790\uac00 \uc27d\uac8c \uc870\uc791 \uac00\ub2a5\n  ...\n};\n```\n\n**\ubb38\uc81c:**\n- \ud074\ub77c\uc774\uc5b8\ud2b8\uac00 `trade_id`\ub97c \ub9c8\uc74c\ub300\ub85c \uc124\uc815 \uac00\ub2a5\n- \ub2e4\ub978 \uc0ac\uc6a9\uc790\uc758 \uc8fc\ubb38\uc5d0 \uacb0\uc81c\ub97c \uc5f0\uacb0\ud560 \uc218 \uc788\uc74c\n- CSRF \uacf5\uaca9\uc5d0 \ucde8\uc57d\n\n**\ud574\uacb0\ucc45:**\n```javascript\napp.post('/payment/start', (req, res) => {\n  const userId = req.user.id;  // \u2705 \uc778\uc99d\ub41c \uc0ac\uc6a9\uc790\n  const orderId = req.body.order_id;\n\n  // \u2705 DB\uc5d0\uc11c \uc8fc\ubb38 \ud655\uc778\n  const order = db.getOrder(orderId, userId);\n  if (!order) {\n    return res.status(404).json({ error: 'Order not found' });\n  }\n\n  // \u2705 \uc11c\ubc84\uc5d0\uc11c trade_id \uc0dd\uc131 (\uc0ac\uc6a9\uc790\uac00 \ubcc0\uc870 \ubd88\uac00)\n  const trade_id = `${userId}_${orderId}_${Date.now()}`;\n\n  const data = {\n    sid: '000730010001',\n    cash_code: 'MC',\n    product_name: order.product_name,\n    trade_id: trade_id,  // \u2705 \uc11c\ubc84 \uc0dd\uc131\n    site_url: process.env.SITE_URL,\n    ok_url: `${process.env.SITE_URL}/ok`,\n    amount: { total: order.amount },\n    skey: process.env.MOBILPAY_SERVICE_KEY\n  };\n\n  // HMAC \uc0dd\uc131 \ubc0f API \ud638\ucd9c...\n});\n```\n\n---\n\n## \ud83d\udfe0 \ub192\uc74c (High)\n\n### 7. **Error Handling \ubc0f \ub85c\uae45 \ubd80\uc7ac**\n\n**\ud604\uc7ac \ucf54\ub4dc:**\n```javascript\nfetch(...).then(r => r.json()).then(d => res.json(d));\n// \u274c \uc5d0\ub7ec \ucc98\ub9ac \uc5c6\uc74c\n```\n\n**\ubb38\uc81c:**\n- API \ud638\ucd9c \uc2e4\ud328 \uc2dc \uc544\ubb34\uac83\ub3c4 \ubc18\ud658\ud558\uc9c0 \uc54a\uc74c\n- \ub124\ud2b8\uc6cc\ud06c \uc624\ub958, \ud0c0\uc784\uc544\uc6c3 \ub4f1\uc744 \ucc98\ub9ac\ud558\uc9c0 \uc54a\uc74c\n- \ub514\ubc84\uae45 \uc815\ubcf4 \uc5c6\uc74c\n\n**\ud574\uacb0\ucc45:**\n```javascript\napp.post('/payment/start', async (req, res) => {\n  try {\n    const response = await fetch('https://mup.mobilians.co.kr/MUP/api/registration', {\n      method: 'POST',\n      headers: {'Content-Type': 'application/json'},\n      body: JSON.stringify(data),\n      timeout: 10000  // \u2705 \ud0c0\uc784\uc544\uc6c3 \uc124\uc815\n    });\n\n    if (!response.ok) {\n      console.error(`API Error: ${response.status} ${response.statusText}`);\n      return res.status(502).json({ error: 'Payment service unavailable' });\n    }\n\n    const data = await response.json();\n    res.json(data);\n\n  } catch (error) {\n    console.error('Payment registration error:', error);\n    res.status(500).json({ error: 'Payment processing failed' });\n  }\n});\n```\n\n---\n\n## \ud83d\udfe1 \uc911\uac04 (Medium)\n\n### 8. **\ud14c\uc2a4\ud2b8/\ud504\ub85c\ub355\uc158 \ud658\uacbd \uad6c\ubd84 \ubd80\uc7ac**\n\n**\ud604\uc7ac \ucf54\ub4dc:**\n```javascript\nfetch('https://mup.mobilians.co.kr/MUP/api/registration', ...)\n// \u274c \ud56d\uc0c1 \ud504\ub85c\ub355\uc158 URL \uc0ac\uc6a9\n```\n\n**\ubb38\uc81c:**\n- \ud14c\uc2a4\ud2b8 \ud658\uacbd\uc5d0\uc11c \uc2e4\uc81c \uacb0\uc81c\uac00 \ubc1c\uc0dd\ud560 \uc218 \uc788\uc74c\n- \ud504\ub85c\ub355\uc158 \ud0a4\ub85c \ud14c\uc2a4\ud2b8\ud560 \uc218 \uc5c6\uc74c\n\n**\ud574\uacb0\ucc45:**\n```javascript\nconst API_HOST = process.env.NODE_ENV === 'production'\n  ? 'https://mup.mobilians.co.kr'\n  : 'https://test.mobilians.co.kr';\n\nconst SKEY = process.env.MOBILPAY_SERVICE_KEY;\n\nfetch(`${API_HOST}/MUP/api/registration`, {\n  // ...\n});\n```\n\n---\n\n## \ud83d\udfe1 \uc911\uac04 (Medium)\n\n### 9. **\uc751\ub2f5 \ub370\uc774\ud130 \uac80\uc99d \ubd80\uc7ac**\n\n**\ud604\uc7ac \ucf54\ub4dc:**\n```javascript\n.then(d => res.json(d))  // \u274c \uc751\ub2f5\uc744 \uadf8\ub300\ub85c \ud074\ub77c\uc774\uc5b8\ud2b8\uc5d0 \uc804\uc1a1\n```\n\n**\ubb38\uc81c:**\n- MOBILPAY \uc751\ub2f5\uc5d0\uc11c \ud544\uc694\ud55c \ud544\ub4dc\uac00 \uc5c6\uc744 \uc218 \uc788\uc74c\n- \ubbfc\uac10\ud55c \uc815\ubcf4\uac00 \ud074\ub77c\uc774\uc5b8\ud2b8\ub85c \ub178\ucd9c\ub420 \uc218 \uc788\uc74c\n\n**\ud574\uacb0\ucc45:**\n```javascript\nconst response = await fetch(...);\nconst data = await response.json();\n\n// \u2705 \uc751\ub2f5 \uac80\uc99d\nif (!data.tid || !data.status) {\n  throw new Error('Invalid response format');\n}\n\n// \u2705 \ud544\uc694\ud55c \uc815\ubcf4\ub9cc \ud074\ub77c\uc774\uc5b8\ud2b8\ub85c \uc804\uc1a1\nres.json({\n  tid: data.tid,\n  status: data.status,\n  redirect_url: data.redirect_url\n  // skey \ub4f1 \ubbfc\uac10\ud55c \uc815\ubcf4\ub294 \uc808\ub300 \uc804\uc1a1\ud558\uc9c0 \uc54a\uc74c\n});\n```\n\n---\n\n## \ud83d\udfe1 \uc911\uac04 (Medium)\n\n### 10. **noti_url HTTP \uc0ac\uc6a9 (\uad8c\uc7a5\uc0ac\ud56d)**\n\n**\ud604\uc7ac \ucf54\ub4dc:**\n```javascript\nok_url: 'http://mysite.com/ok'  // \u26a0\ufe0f HTTP \uc0ac\uc6a9\n```\n\n**\uad8c\uc7a5\uc0ac\ud56d:**\n```javascript\nok_url: 'https://mysite.com/ok'  // \u2705 \ud56d\uc0c1 HTTPS \uc0ac\uc6a9\n```\n\n---\n\n## \ud83d\udccb \uc885\ud569 \uac1c\uc120 \uac00\uc774\ub4dc\n\n### \ud544\uc218 \uad6c\ud604 \ud56d\ubaa9:\n1. \u2705 Service Key\ub97c \ud658\uacbd \ubcc0\uc218\ub85c \uc774\ub3d9\n2. \u2705 \uacb0\uc81c \ub4f1\ub85d \uc694\uccad\uc5d0 HMAC \ucd94\uac00\n3. \u2705 noti_url \ucf5c\ubc31\uc5d0 \uba71\ub4f1\uc131 \uac80\uc99d \uad6c\ud604\n4. \u2705 \ubaa8\ub4e0 \uc11c\ubc84-\uc11c\ubc84 \ud1b5\uc2e0\uc5d0 HMAC \uac80\uc99d \ucd94\uac00\n5. \u2705 trade_id\ub97c \uc11c\ubc84\uc5d0\uc11c \uc0dd\uc131\ud558\uace0 \uad00\ub9ac\n6. \u2705 \uc5d0\ub7ec \ucc98\ub9ac \ubc0f \ub85c\uae45 \ucd94\uac00\n7. \u2705 \ud14c\uc2a4\ud2b8/\ud504\ub85c\ub355\uc158 \ud658\uacbd \ubd84\ub9ac\n8. \u2705 \uc751\ub2f5 \ub370\uc774\ud130 \uac80\uc99d \ubc0f \ud544\ud130\ub9c1\n\n### \ubcf4\uc548 \uccb4\ud06c\ub9ac\uc2a4\ud2b8:\n- [ ] \ubaa8\ub4e0 API \ud638\ucd9c\uc5d0 \uc778\uc99d \ucd94\uac00\n- [ ] HMAC \uac80\uc99d\uc744 \ubaa8\ub4e0 \uc11c\ubc84-\uc11c\ubc84 \ud1b5\uc2e0\uc5d0 \uc801\uc6a9\n- [ ] \ud658\uacbd \ubcc0\uc218 \uad00\ub9ac (.env, .env.local, .gitignore)\n- [ ] \uba71\ub4f1\uc131 \uac80\uc99d \uad6c\ud604\n- [ ] HTTPS \uc0ac\uc6a9 \ubc0f \uc778\uc99d\uc11c \uac80\uc99d\n- [ ] \uc0ac\uc6a9\uc790 \uc778\uc99d \ubc0f \uad8c\ud55c \uac80\uc99d\n- [ ] \uc785\ub825 \ub370\uc774\ud130 \uac80\uc99d (\uac12 \ubc94\uc704, \ud615\uc2dd \ub4f1)\n- [ ] \ubbfc\uac10\ud55c \uc815\ubcf4 \ub85c\uae45 \uae08\uc9c0\n- [ ] \ud0c0\uc784\uc544\uc6c3 \uc124\uc815\n- [ ] \ub808\uc774\ud2b8 \uc81c\ud55c \uace0\ub824\n\n---\n\n## \uacb0\ub860\n\n**\ud604\uc7ac \ucf54\ub4dc \ubcf4\uc548 \ub4f1\uae09: \ud83d\udd34 \uc2ec\uac01 (Critical)**\n\n\uc774 \ucf54\ub4dc\ub294 \ub2e4\uc74c\uacfc \uac19\uc740 \uc774\uc720\ub85c \ud504\ub85c\ub355\uc158 \ud658\uacbd\uc5d0\uc11c \uc0ac\uc6a9\ud560 \uc218 \uc5c6\uc2b5\ub2c8\ub2e4:\n\n1. Service Key\uac00 \uc18c\uc2a4 \ucf54\ub4dc\uc5d0 \ub178\ucd9c\ub428\n2. API \ud1b5\uc2e0 \uc778\uc99d \ubc0f \uac80\uc99d \ubd80\uc7ac\n3. \uacb0\uc81c \ucf5c\ubc31\uc5d0\uc11c \uba71\ub4f1\uc131 \uac80\uc99d \uc5c6\uc74c\n4. \uc0ac\uc6a9\uc790 \uad8c\ud55c \uac80\uc99d \ubd80\uc7ac\n\n**\uad8c\uc7a5\uc0ac\ud56d:** \uc704 10\uac00\uc9c0 \ubb38\uc81c\ub97c \ubaa8\ub450 \ud574\uacb0\ud55c \ud6c4 \ubcf4\uc548 \uac10\uc2dc \ubc0f \uac10\uc0ac\ub97c \uc2e4\uc2dc\ud55c \ud6c4 \ud504\ub85c\ub355\uc158 \ubc30\ud3ec\ub97c \uc9c4\ud589\ud558\uc138\uc694.\n"}], "grading": {"expectations": [{"text": "skey \ud558\ub4dc\ucf54\ub529 \ubb38\uc81c\ub97c \uc9c0\uc801\ud568", "passed": true, "evidence": "Lines 5-27: Section '\uc2ec\uac01\ud55c \ubcf4\uc548 \ubb38\uc81c (Critical)' labeled '1. Service Key(skey) \ub178\ucd9c - \ucd5c\uc6b0\uc120 \ud574\uacb0 \ud544\uc694' identifying const SKEY = 'my_secret_key_123' as \u274c \uc704\ud5d8: \ud074\ub77c\uc774\uc5b8\ud2b8 \ucf54\ub4dc\uc5d0 \ud558\ub4dc\ucf54\ub529"}, {"text": "HMAC \uac80\uc99d \ub204\ub77d\uc744 \uc9c0\uc801\ud568", "passed": true, "evidence": "Lines 31-89: Section '2. \uacb0\uc81c \ub4f1\ub85d \uc694\uccad\uc5d0\uc11c skey \ubbf8\ud3ec\ud568 \ubc0f HMAC \uac80\uc99d \ubd80\uc7ac' describing 'HMAC \ubb34\uacb0\uc131 \uac80\uc99d \uc5c6\uc774 \uc694\uccad\uc744 \uc804\uc1a1' with solution code provided"}, {"text": "noti_url \uc911\ubcf5 \ubc29\uc5b4 \ub85c\uc9c1 \ubd80\uc7ac\ub97c \uc9c0\uc801\ud568", "passed": true, "evidence": "Lines 93-142: Section '3. Notification URL (noti_url) \ucf5c\ubc31\uc5d0\uc11c \uba71\ub4f1\uc131 \uac80\uc99d \ubd80\uc7ac' showing problem of duplicate processing and providing async idempotency check with db.checkTransactionProcessed(tid)"}, {"text": "SUCCESS \ucd9c\ub825\uc5d0 HTML\uc774 \ud3ec\ud568\ub41c \ubb38\uc81c\ub97c \uc9c0\uc801\ud568", "passed": false, "evidence": "While the review identifies many issues, it doesn't specifically call out HTML in SUCCESS responses as a separate critical issue. The focus is on noti_url handling but not the specific HTML wrapper problem."}, {"text": "\uae08\uc561 \uac80\uc99d \ub204\ub77d\uc744 \uc9c0\uc801\ud568", "passed": false, "evidence": "No dedicated section addressing amount validation. While implied in noti_url discussion, no explicit call-out of the missing 'original amount vs response amount' comparison."}, {"text": "\uc218\uc815\ub41c \ucf54\ub4dc \ub610\ub294 \uac1c\uc120 \ubc29\uc548\uc744 \uc81c\uc2dc\ud568", "passed": true, "evidence": "Multiple code solutions provided: lines 18-26 for skey fix, lines 57-88 for HMAC generation, lines 115-141 for idempotency with async/await, lines 158-174 for HMAC verification, lines 189-202 for HTTPS agent, etc."}]}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"skill_name": "mobilpay-integration", "model": "claude-sonnet-4-6", "date": "2026-03-18T13:21:20Z", "configs": [{"name": "with_skill", "pass_rate": {"mean": 1.0, "std": 0.0}, "time": {"mean": 64.5, "std": 14.6}, "tokens": {"mean": 56561, "std": 4485}}, {"name": "without_skill", "pass_rate": {"mean": 0.57, "std": 0.0}, "time": {"mean": 35.5, "std": 5.3}, "tokens": {"mean": 28856, "std": 1038}}], "delta": {"pass_rate": 0.43, "time": 29.0, "tokens": 27705}, "evals": [{"eval_name": "creditcard-nodejs-integration", "with_skill": {"pass_rate": 1.0, "passed": 8, "total": 8, "time": 81.0, "tokens": 61243}, "without_skill": {"pass_rate": 0.5, "passed": 4, "total": 8, "time": 41.4, "tokens": 29988}}, {"eval_name": "kakaopay-python-registration", "with_skill": {"pass_rate": 1.0, "passed": 7, "total": 7, "time": 59.4, "tokens": 52328}, "without_skill": {"pass_rate": 0.57, "passed": 4, "total": 7, "time": 31.0, "tokens": 27912}}, {"eval_name": "security-code-review", "with_skill": {"pass_rate": 1.0, "passed": 6, "total": 6, "time": 53.0, "tokens": 56111}, "without_skill": {"pass_rate": 0.67, "passed": 4, "total": 6, "time": 34.6, "tokens": 28668}}]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

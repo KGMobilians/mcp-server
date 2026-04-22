@@ -1,0 +1,9 @@
+src/
+분석자료/
+참고자료/
+.claude/
+tsconfig.json
+*.ts
+!dist/**/*.ts
+dist/**/*.test.js
+dist/**/*.test.d.ts

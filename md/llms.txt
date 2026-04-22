@@ -1,0 +1,34 @@
+# KG파이낸셜 결제서비스 개발자센터
+
+## MOBILPAY REST API 결제연동
+
+- [거래 등록 API](/payment/api/registration.md): 결제 창 호출을 위한 거래정보 등록. POST /MUP/api/registration
+- [결제 창 호출](/payment/api/payment-window.md): 거래등록 응답의 pay_url을 팝업/iframe/QRCode로 호출
+- [결제 인증/승인 응답](/payment/api/auth-response.md): 결제창 이후 ok_url/fail_url/noti_url로 전달되는 결과 처리
+- [결제 승인 - TID 방식](/payment/api/approval-tid.md): TID 기반 하이브리드 결제 승인. POST /MUP/api/approval
+- [결제 승인 - MOBILID 방식](/payment/api/approval-mobilid.md): MOBILID 기반 결제 승인 (TID 미사용 가맹점). POST /MUP/api/approval
+- [수동 매입](/payment/api/purchase.md): 신용카드/간편결제 수동 매입. POST /MUP/api/purchase
+- [가상계좌](/payment/api/virtual-account.md): 가상계좌 채번취소, 입금 후 noti_url 처리. POST /MUP/api/account-expire
+- [결제 취소](/payment/api/cancel.md): 전체취소/부분취소 처리. POST /MUP/api/cancel (cancel_type=C)
+- [환불](/payment/api/refund.md): 계좌이체 환불 처리. POST /MUP/api/cancel (cancel_type=R)
+- [현금영수증](/payment/api/cash-receipt.md): 발급/취소/단독취소. POST /MUP/api/cash-receipt
+- [HMAC 무결성 검증](/payment/api/hmac.md): skey 기반 HMAC-SHA256 메시지 무결성 검증. Java/.NET/Node.js/Python/PHP 예제 포함
+- [결제 플로우 - 일반결제](/payment/guides/flow-normal.md): 인증+승인 일체형 결제 순서도
+- [결제 플로우 - 하이브리드결제](/payment/guides/flow-hybrid.md): 인증/승인 분리형 결제 순서도
+- [noti_url 처리 가이드](/payment/guides/noti-url.md): noti_url 결과 수신, SUCCESS/FAIL 출력 규칙, 중복 방어 로직
+- [방화벽 설정](/payment/guides/firewall.md): 결제서버 IP/PORT 정보, 방화벽 인바운드/아웃바운드 설정
+- [적용가이드](/payment/guides/integration-guide.md): 결제수단별 연동 참고사항, 결제창 크기, 기술지원 문의
+- [에러코드표](/payment/reference/error-codes.md): API 에러코드 및 현금영수증 에러코드
+- [코드표](/payment/reference/payment-codes.md): 결제수단/신용카드/간편결제/금융기관/이동통신사 코드표 통합
+
+## 내죠여왕(NEZO) 알림톡 결제서비스
+
+- [결제 요청 API](/nezo/api/send.md): 카카오 알림톡으로 결제 요청 발송. POST /send
+- [결제 완료 콜백/리턴 URL](/nezo/api/callback.md): callback_url/return_url 결제 완료 결과 수신 및 처리
+- [결제 조회 API](/nezo/api/search.md): 결제 상태 조회. POST /send/view
+- [결제 취소 API](/nezo/api/cancel.md): 결제 취소 처리. POST /cancel
+- [결제 재요청 API](/nezo/api/resend.md): 알림톡 결제 재발송
+- [시작하기](/nezo/guides/start.md): 서비스 개요, 접속정보, API 목록, MAC 설명, 보안 규칙
+- [방화벽 설정](/nezo/guides/firewall.md): 내죠여왕 서버 IP/PORT 방화벽 설정 정보
+- [공통 응답 코드](/nezo/reference/response-codes.md): API 응답 코드(result_cd) 전체 목록 및 처리 가이드
+- [MAC 생성/검증 가이드](/nezo/reference/mac-guide.md): HmacSHA256 MAC 생성/검증 방법. Java/C#/Node.js/Python/PHP 예제 포함

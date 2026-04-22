@@ -1,0 +1,23 @@
+{
+  "skill_name": "nezo-integration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "내죠여왕으로 Node.js/Express 기반 알림톡 결제 요청을 연동하려고 합니다. 결제 요청 API 호출부터 callback_url로 결제 결과를 수신하는 것까지 전체 코드를 작성해주세요. 테스트 환경 기준입니다.",
+      "expected_output": "결제 요청 API(/send) 호출 코드(올바른 파라미터, MAC 생성), callback_url 핸들러(MAC 검증, 멱등성 로직, HTTP 200 응답), svc_id/MAC_KEY 환경변수 로드가 모두 포함된 Node.js 코드",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "내죠여왕 결제 조회와 취소를 Java/Spring Boot로 구현하고 싶습니다. 결제 조회 후 상태에 따라 취소 처리하는 코드를 작성해주세요.",
+      "expected_output": "결제 조회 API(/send/view) 호출, cancel_yn 상태 확인, 결제 취소 API(/cancel) 호출, MAC 생성/검증, svc_id/MAC_KEY 환경변수 사용이 포함된 Java/Spring Boot 코드",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "기존 내죠여왕 콜백 핸들러 코드를 리뷰해주세요. 보안상 문제가 있는지 확인해주세요.\n\n```javascript\nconst MAC_KEY = 'my_secret_123';\napp.post('/pay/callback', (req, res) => {\n  const {result_cd, trade_no, pay_no} = req.body;\n  if(result_cd === '0000') {\n    updateOrder(trade_no, pay_no);\n  }\n  res.send('OK');\n});\n```",
+      "expected_output": "보안 문제 목록: (1) MAC_KEY 하드코딩 → 환경변수 사용 권고, (2) MAC 검증 누락, (3) 중복 처리 방어 로직(멱등성) 없음, (4) 실패(result_cd !== 0000) 시 처리 누락. 수정된 코드 제시",
+      "files": []
+    }
+  ]
+}

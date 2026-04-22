@@ -1,0 +1,23 @@
+{
+  "skill_name": "mobilpay-integration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "MOBILPAY로 Node.js/Express 기반 신용카드 결제를 연동하려고 합니다. 거래등록 API 호출부터 결제 완료 후 noti_url로 결과를 수신하는 것까지 전체 코드를 작성해주세요. 테스트 환경 기준입니다.",
+      "expected_output": "거래등록 API 호출 코드(올바른 파라미터), noti_url 핸들러(멱등성 로직, HMAC 검증, SUCCESS/FAIL 출력), skey 환경변수 로드가 모두 포함된 Node.js 코드",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "카카오페이 간편결제를 MOBILPAY로 연동하고 싶습니다. Python(Flask)으로 거래등록 요청 코드를 작성해주세요. 결제 금액은 15000원이고 상품명은 '프리미엄 구독'입니다.",
+      "expected_output": "Flask 기반 거래등록 API 호출 코드. cash_code=CN, ep_code=KKO 설정, 올바른 amount 구조, skey가 환경변수에서 로드, 테스트/운영 호스트 분기",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "기존 MOBILPAY 결제 연동 코드를 리뷰해주세요. 보안상 문제가 있는지 확인해주세요.\n\n```javascript\nconst SKEY = 'my_secret_key_123';\napp.post('/payment/start', (req, res) => {\n  const data = { sid: '000730010001', cash_code: 'MC', product_name: '테스트', trade_id: 'order_1', site_url: 'mysite.com', ok_url: 'http://mysite.com/ok', amount: { total: 1000 } };\n  fetch('https://mup.mobilians.co.kr/MUP/api/registration', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) }).then(r => r.json()).then(d => res.json(d));\n});\napp.post('/payment/noti', (req, res) => {\n  const {code, amount} = req.body;\n  if(code === '0000') { updateOrder(req.body.trade_id); res.send('<html><body>SUCCESS</body></html>'); }\n});\n```",
+      "expected_output": "보안 문제 목록: (1) skey 하드코딩 → 환경변수 사용 권고, (2) HMAC 검증 누락, (3) noti_url 중복 방어 로직 없음, (4) SUCCESS 출력에 HTML 포함 → 문자열만 출력, (5) 금액 검증 누락, (6) IP 검증 누락. 수정된 코드 제시",
+      "files": []
+    }
+  ]
+}

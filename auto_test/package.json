@@ -1,0 +1,19 @@
+{
+  "name": "mobilpay-test-harness",
+  "version": "1.0.0",
+  "description": "MOBILPAY 결제연동 실거래 테스트 도구",
+  "type": "module",
+  "scripts": {
+    "start": "tsx server/app.ts",
+    "dev": "tsx watch server/app.ts"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.4",
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  }
+}

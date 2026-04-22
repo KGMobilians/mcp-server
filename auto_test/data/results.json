@@ -1,0 +1,680 @@
+[
+  {
+    "caseId": "MC-01",
+    "caseName": "일반결제 + Popup + ok_url만",
+    "runId": "bb053b06",
+    "timestamp": "2026-04-08 06:50:38",
+    "registration": {
+      "tid": "2039d27d659b17632",
+      "tradeId": "TEST_MC-01_MNPOVHRN",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d659b17632",
+      "hmac": "vTUNtWOpYxSVbr5//fYJhXyMX8uWL9fYqC1/AMN7NLk=",
+      "timeStamp": "20260408155038",
+      "reqBody": {
+        "sid": "YOUR_SID_HERE",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 일반-팝업-okUrl",
+        "trade_id": "TEST_MC-01_MNPOVHRN",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "http://localhost:3100/callback/ok/bb053b06",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "N"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "YOUR_SID_HERE",
+        "tid": "2039d27d659b17632",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d659b17632",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27d659b17632",
+        "hmac": "vTUNtWOpYxSVbr5//fYJhXyMX8uWL9fYqC1/AMN7NLk=",
+        "time_stamp": "20260408155038"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  },
+  {
+    "caseId": "MC-01",
+    "caseName": "일반결제 + Popup + ok_url만",
+    "runId": "842d5d23",
+    "timestamp": "2026-04-08 06:50:56",
+    "registration": {
+      "tid": "2039d27d65ac41eb5",
+      "tradeId": "TEST_MC-01_MNPOVVSB",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65ac41eb5",
+      "hmac": "SOj8U4NwHiNe17h0OBSH7rV1h6kBskUAfW/nwflE55A=",
+      "timeStamp": "20260408155056",
+      "reqBody": {
+        "sid": "YOUR_SID_HERE",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 일반-팝업-okUrl",
+        "trade_id": "TEST_MC-01_MNPOVVSB",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "http://localhost:3100/callback/ok/842d5d23",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "N"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "YOUR_SID_HERE",
+        "tid": "2039d27d65ac41eb5",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65ac41eb5",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27d65ac41eb5",
+        "hmac": "SOj8U4NwHiNe17h0OBSH7rV1h6kBskUAfW/nwflE55A=",
+        "time_stamp": "20260408155056"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  },
+  {
+    "caseId": "MC-02",
+    "caseName": "일반결제 + Popup + ok_url + noti_url",
+    "runId": "53d7ca75",
+    "timestamp": "2026-04-08 06:51:24",
+    "registration": {
+      "tid": "2039d27d65ed1b7b8",
+      "tradeId": "TEST_MC-02_MNPOWH2I",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65ed1b7b8",
+      "hmac": "UeWPUcCVE14XjoZlwQZR7aH+QRGZJ41lYllJiHph3AI=",
+      "timeStamp": "20260408155124",
+      "reqBody": {
+        "sid": "YOUR_SID_HERE",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 일반-팝업-okUrl+notiUrl",
+        "trade_id": "TEST_MC-02_MNPOWH2I",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "http://localhost:3100/callback/ok/53d7ca75",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "N",
+        "noti_url": "http://localhost:3100/callback/noti/53d7ca75"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "YOUR_SID_HERE",
+        "tid": "2039d27d65ed1b7b8",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65ed1b7b8",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27d65ed1b7b8",
+        "hmac": "UeWPUcCVE14XjoZlwQZR7aH+QRGZJ41lYllJiHph3AI=",
+        "time_stamp": "20260408155124"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  },
+  {
+    "caseId": "MC-03",
+    "caseName": "하이브리드결제 + Popup + ok_url만",
+    "runId": "3d66ac9b",
+    "timestamp": "2026-04-08 06:51:27",
+    "registration": {
+      "tid": "2039d27d65eff7e7b",
+      "tradeId": "TEST_MC-03_MNPOWJIN",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65eff7e7b",
+      "hmac": "6tAmFstBbjGq0I7saTqm/tIFf1f2irYSkbwWesXhXao=",
+      "timeStamp": "20260408155127",
+      "reqBody": {
+        "sid": "YOUR_SID_HERE",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 하이브리드-팝업-okUrl",
+        "trade_id": "TEST_MC-03_MNPOWJIN",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "http://localhost:3100/callback/ok/3d66ac9b",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "Y"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "YOUR_SID_HERE",
+        "tid": "2039d27d65eff7e7b",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65eff7e7b",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27d65eff7e7b",
+        "hmac": "6tAmFstBbjGq0I7saTqm/tIFf1f2irYSkbwWesXhXao=",
+        "time_stamp": "20260408155127"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  },
+  {
+    "caseId": "MC-04",
+    "caseName": "하이브리드결제 + Popup + ok_url + noti_url",
+    "runId": "f486fb05",
+    "timestamp": "2026-04-08 06:51:32",
+    "registration": {
+      "tid": "2039d27d65f4bc9be",
+      "tradeId": "TEST_MC-04_MNPOWNE1",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65f4bc9be",
+      "hmac": "ElhwQOUKXckS++LwLYUpbuaVz+3MfU/BtipZlmfV6NM=",
+      "timeStamp": "20260408155132",
+      "reqBody": {
+        "sid": "YOUR_SID_HERE",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 하이브리드-팝업-okUrl+notiUrl",
+        "trade_id": "TEST_MC-04_MNPOWNE1",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "http://localhost:3100/callback/ok/f486fb05",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "Y",
+        "noti_url": "http://localhost:3100/callback/noti/f486fb05"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "YOUR_SID_HERE",
+        "tid": "2039d27d65f4bc9be",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65f4bc9be",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27d65f4bc9be",
+        "hmac": "ElhwQOUKXckS++LwLYUpbuaVz+3MfU/BtipZlmfV6NM=",
+        "time_stamp": "20260408155132"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  },
+  {
+    "caseId": "MC-05",
+    "caseName": "일반결제 + Self(페이지전환) + ok_url",
+    "runId": "37380d45",
+    "timestamp": "2026-04-08 06:51:36",
+    "registration": {
+      "tid": "2039d27d65f799081",
+      "tradeId": "TEST_MC-05_MNPOWQ4W",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65f799081",
+      "hmac": "5xjkIDsy8eyMzKRlhOONYblwvX8mYY5JQ8Z/m4QYxR0=",
+      "timeStamp": "20260408155135",
+      "reqBody": {
+        "sid": "YOUR_SID_HERE",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 일반-Self-okUrl",
+        "trade_id": "TEST_MC-05_MNPOWQ4W",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "http://localhost:3100/callback/ok/37380d45",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "S",
+        "hybrid_pay": "N",
+        "close_url": "http://localhost:3100/callback/close/37380d45"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "YOUR_SID_HERE",
+        "tid": "2039d27d65f799081",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65f799081",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27d65f799081",
+        "hmac": "5xjkIDsy8eyMzKRlhOONYblwvX8mYY5JQ8Z/m4QYxR0=",
+        "time_stamp": "20260408155135"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  },
+  {
+    "caseId": "MC-06",
+    "caseName": "일반결제 + iframe + ok_url",
+    "runId": "e46cd77a",
+    "timestamp": "2026-04-08 06:51:38",
+    "registration": {
+      "tid": "2039d27d65fa75744",
+      "tradeId": "TEST_MC-06_MNPOWSCR",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65fa75744",
+      "hmac": "D07iIZ1Gq3kodRSFK/f3ZtZPZWt46pwSruduYHdofK8=",
+      "timeStamp": "20260408155138",
+      "reqBody": {
+        "sid": "YOUR_SID_HERE",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 일반-iframe-okUrl",
+        "trade_id": "TEST_MC-06_MNPOWSCR",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "http://localhost:3100/callback/ok/e46cd77a",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "I",
+        "hybrid_pay": "N",
+        "close_url": "http://localhost:3100/callback/close/e46cd77a"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "YOUR_SID_HERE",
+        "tid": "2039d27d65fa75744",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27d65fa75744",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27d65fa75744",
+        "hmac": "D07iIZ1Gq3kodRSFK/f3ZtZPZWt46pwSruduYHdofK8=",
+        "time_stamp": "20260408155138"
+      },
+      "success": true
+    },
+    "verdict": "fail",
+    "verdictReason": "사용자가 결제를 취소했습니다."
+  },
+  {
+    "caseId": "MC-01",
+    "caseName": "일반결제 + Popup + ok_url만",
+    "runId": "cf88ee0b",
+    "timestamp": "2026-04-08 09:09:38",
+    "registration": {
+      "tid": "2039d27dc617419e0",
+      "tradeId": "TEST_MC-01_MNPTU8KZ",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27dc617419e0",
+      "hmac": "P6AzLjsCHDLVNP8ZRS0oMBT4CV6nx3XyZTimIe+Brjc=",
+      "timeStamp": "20260408180938",
+      "reqBody": {
+        "sid": "000730010001",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 일반-팝업-okUrl",
+        "trade_id": "TEST_MC-01_MNPTU8KZ",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/ok/cf88ee0b",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "N"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "000730010001",
+        "tid": "2039d27dc617419e0",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27dc617419e0",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27dc617419e0",
+        "hmac": "P6AzLjsCHDLVNP8ZRS0oMBT4CV6nx3XyZTimIe+Brjc=",
+        "time_stamp": "20260408180938"
+      },
+      "success": true
+    },
+    "verdict": "success",
+    "verdictReason": "결제 성공 (일반 플로우)",
+    "okUrl": {
+      "receivedAt": "2026-04-08 09:10:22",
+      "params": {
+        "pay_token": "5004103496",
+        "mc_simple_key": "",
+        "deposit": "",
+        "cash_code": "MC",
+        "fwd_hash": "1c51a1de31ea212e55fba509b26b7dc4936688135847bf5499fd655a23a45d3de6b298cfd50bd60b902988a64e4e18721fadeed9ac21e96acd1dbada74a713d81e9b3bff15a6d69737be26d539246b57c946893da319f9b5d2d44df71fd7f0d6",
+        "mc_bill_key": "",
+        "amount": "1000",
+        "jeus.servlet.request.decodedRequestURI": "/MUP/api/result.mcash",
+        "phone_no": "01042005790",
+        "mc_user_key": "",
+        "FwdNotiurl": "",
+        "mstr": "",
+        "tid": "2039d27dc617419e0",
+        "multi_payment_list": "",
+        "code": "0000",
+        "comm_id": "000",
+        "transaction_id": "",
+        "user_name": "",
+        "sign_date": "20260408181022",
+        "hmac": "P6AzLjsCHDLVNP8ZRS0oMBT4CV6nx3XyZTimIe+Brjc=",
+        "trade_id": "TEST_MC-01_MNPTU8KZ",
+        "product_name": "[TEST] 휴대폰 일반-팝업-okUrl",
+        "user_email": "",
+        "hmac2": "Tx/7gtgExqUhRTa7koB5FDE8FAiDMkRvGeRYNV3Q58M=",
+        "user_id": "",
+        "time_stamp": "20260408180938",
+        "sid": "000730010001",
+        "message": "정상처리 되었습니다."
+      },
+      "code": "0000",
+      "hmacValid": true
+    }
+  },
+  {
+    "caseId": "MC-02",
+    "caseName": "일반결제 + Popup + ok_url + noti_url",
+    "runId": "7db2e49f",
+    "timestamp": "2026-04-08 09:11:30",
+    "registration": {
+      "tid": "2039d27dc6ce5c9e3",
+      "tradeId": "TEST_MC-02_MNPTWN1X",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27dc6ce5c9e3",
+      "hmac": "iDLWhtGimLoXiWHlrqPXC6XLvP/ldjOvpMwOHILxsc4=",
+      "timeStamp": "20260408181130",
+      "reqBody": {
+        "sid": "000730010001",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 일반-팝업-okUrl+notiUrl",
+        "trade_id": "TEST_MC-02_MNPTWN1X",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/ok/7db2e49f",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "N",
+        "noti_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/noti/7db2e49f"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "000730010001",
+        "tid": "2039d27dc6ce5c9e3",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27dc6ce5c9e3",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27dc6ce5c9e3",
+        "hmac": "iDLWhtGimLoXiWHlrqPXC6XLvP/ldjOvpMwOHILxsc4=",
+        "time_stamp": "20260408181130"
+      },
+      "success": true
+    },
+    "verdict": "success",
+    "verdictReason": "결제 성공 (일반 플로우)",
+    "notiUrl": {
+      "receivedAt": "2026-04-08 09:12:02",
+      "params": {
+        "code": "0000",
+        "message": "%C1%A4%BB%F3%C3%B3%B8%AE%20%B5%C7%BE%FA%BD%C0%B4%CF%B4%D9.",
+        "sid": "000730010001",
+        "tid": "2039d27dc6ce5c9e3",
+        "product_name": "[TEST]%20%C8%DE%B4%EB%C6%F9%20%C0%CF%B9%DD-%C6%CB%BE%F7-okUrl%2BnotiUrl",
+        "amount": "1000",
+        "sign_date": "20260408181201",
+        "trade_id": "TEST_MC-02_MNPTWN1X",
+        "cash_code": "MC",
+        "pay_token": "5004103499",
+        "user_id": "",
+        "user_name": "",
+        "mstr": "",
+        "time_stamp": "20260408181130",
+        "hmac": "iDLWhtGimLoXiWHlrqPXC6XLvP/ldjOvpMwOHILxsc4=",
+        "hmac2": "ciLm62Zn+p2Ig+uF1/FRtoUAXdFMkYGqjJaxT9C2T4o=",
+        "phone_no": "01042005790",
+        "mc_user_key": "",
+        "mc_bill_key": "",
+        "mc_simple_key": "",
+        "deposit": ""
+      },
+      "code": "0000",
+      "hmacValid": true
+    },
+    "okUrl": {
+      "receivedAt": "2026-04-08 09:12:02",
+      "params": {
+        "pay_token": "5004103499",
+        "mc_simple_key": "",
+        "deposit": "",
+        "cash_code": "MC",
+        "fwd_hash": "1c51a1de31ea212e55fba509b26b7dc490f8d4326917e0100a3e54d38fc30ec7e6b298cfd50bd60b902988a64e4e1872e7e68db8a6f34855dfdccc998ff76667dbb67b9bb76ad9affe8a493946da96bd2994e8717d75a35275d98239c8622e79",
+        "mc_bill_key": "",
+        "amount": "1000",
+        "jeus.servlet.request.decodedRequestURI": "/MUP/api/result.mcash",
+        "phone_no": "01042005790",
+        "mc_user_key": "",
+        "FwdNotiurl": "https://barwise-lowell-mussily.ngrok-free.dev/callback/noti/7db2e49f",
+        "mstr": "",
+        "tid": "2039d27dc6ce5c9e3",
+        "multi_payment_list": "",
+        "code": "0000",
+        "comm_id": "000",
+        "transaction_id": "",
+        "user_name": "",
+        "sign_date": "20260408181201",
+        "hmac": "iDLWhtGimLoXiWHlrqPXC6XLvP/ldjOvpMwOHILxsc4=",
+        "trade_id": "TEST_MC-02_MNPTWN1X",
+        "product_name": "[TEST] 휴대폰 일반-팝업-okUrl+notiUrl",
+        "user_email": "",
+        "hmac2": "ciLm62Zn+p2Ig+uF1/FRtoUAXdFMkYGqjJaxT9C2T4o=",
+        "user_id": "",
+        "time_stamp": "20260408181130",
+        "sid": "000730010001",
+        "message": "정상처리 되었습니다."
+      },
+      "code": "0000",
+      "hmacValid": true
+    }
+  },
+  {
+    "caseId": "MC-04",
+    "caseName": "하이브리드결제 + Popup + ok_url + noti_url",
+    "runId": "d541658e",
+    "timestamp": "2026-04-08 09:13:48",
+    "registration": {
+      "tid": "2039d27dc79e43466",
+      "tradeId": "TEST_MC-04_MNPTZLR5",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27dc79e43466",
+      "hmac": "U9enbiwffT5Lr8cwh+JzYX3nU8zss+M4jhxoRWWUj08=",
+      "timeStamp": "20260408181348",
+      "reqBody": {
+        "sid": "000730010001",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 하이브리드-팝업-okUrl+notiUrl",
+        "trade_id": "TEST_MC-04_MNPTZLR5",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/ok/d541658e",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "Y",
+        "noti_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/noti/d541658e"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "000730010001",
+        "tid": "2039d27dc79e43466",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27dc79e43466",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d27dc79e43466",
+        "hmac": "U9enbiwffT5Lr8cwh+JzYX3nU8zss+M4jhxoRWWUj08=",
+        "time_stamp": "20260408181348"
+      },
+      "success": true
+    },
+    "verdict": "success",
+    "verdictReason": "결제 성공 (하이브리드 플로우 — 인증+승인 완료)",
+    "okUrl": {
+      "receivedAt": "2026-04-08 09:14:37",
+      "params": {
+        "pay_token": "5004103502",
+        "mc_simple_key": "",
+        "deposit": "",
+        "cash_code": "MC",
+        "fwd_hash": "1c51a1de31ea212e55fba509b26b7dc441adde61d6d4fe947c8908d8115f3b53e6b298cfd50bd60b902988a64e4e18722aa715d62c87f2c41781f47e8f097a3b3b7c27df66a6e060961a3bb325c50f2f81942c2028f9141dd72e2b0c6a3a70d9",
+        "mc_bill_key": "",
+        "amount": "1000",
+        "jeus.servlet.request.decodedRequestURI": "/MUP/api/result.mcash",
+        "phone_no": "01042005790",
+        "mc_user_key": "uk0030943181203",
+        "FwdNotiurl": "https://barwise-lowell-mussily.ngrok-free.dev/callback/noti/d541658e",
+        "mstr": "",
+        "tid": "2039d27dc79e43466",
+        "multi_payment_list": "",
+        "code": "0000",
+        "comm_id": "000",
+        "transaction_id": "",
+        "user_name": "",
+        "sign_date": "20260408181437",
+        "hmac": "U9enbiwffT5Lr8cwh+JzYX3nU8zss+M4jhxoRWWUj08=",
+        "trade_id": "TEST_MC-04_MNPTZLR5",
+        "product_name": "[TEST] 휴대폰 하이브리드-팝업-okUrl+notiUrl",
+        "user_email": "",
+        "hmac2": "JlOVOcyqpdE7iUfAjLuK9dRwbV3KFZFF1sSFE4vlaX8=",
+        "user_id": "",
+        "time_stamp": "20260408181348",
+        "sid": "000730010001",
+        "message": "정상처리 되었습니다."
+      },
+      "code": "0000",
+      "hmacValid": true
+    },
+    "approval": {
+      "requestedAt": "2026-04-08 09:14:38",
+      "reqBody": {
+        "sid": "000730010001",
+        "tid": "2039d27dc79e43466",
+        "cash_code": "MC",
+        "pay_token": "5004103502",
+        "amount": "1000",
+        "mc_user_key": "uk0030943181203"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상처리 되었습니다.",
+        "sid": "000730010001",
+        "tid": "2039d27dc79e43466",
+        "sign_date": "20260408181438",
+        "trade_id": "TEST_MC-04_MNPTZLR5",
+        "mobil_id": "5004103502",
+        "cash_code": "MC",
+        "pay_token": "5004103502",
+        "product_name": "[TEST] 휴대폰 하이브리드-팝업-okUrl+notiUrl",
+        "amount": "1000",
+        "mc_user_key": "uk0030943181203",
+        "mc_simple_key": "",
+        "mc_bill_key": "",
+        "hmac": "U9enbiwffT5Lr8cwh+JzYX3nU8zss+M4jhxoRWWUj08=",
+        "deposit": "",
+        "transaction_id": "20260408MCTA2001181438A000005304"
+      },
+      "success": true
+    }
+  },
+  {
+    "caseId": "CN-02",
+    "caseName": "일시불 + Popup + ok_url + noti_url",
+    "runId": "63a761c1",
+    "timestamp": "2026-04-08 10:55:30",
+    "registration": {
+      "tid": "2039d27dfc72e6ab9",
+      "tradeId": "TEST_CN-02_MNPXME3G",
+      "payUrl": "https://mup.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27dfc72e6ab9",
+      "hmac": "JTbWWmgqnIMr0OkNnFEBDZLsn55jxQ4JZ/sOreYppKA=",
+      "timeStamp": "20260408195530",
+      "reqBody": {
+        "sid": "000730010001",
+        "cash_code": "CN",
+        "product_name": "[TEST] 신용카드 일시불-팝업-okUrl+notiUrl",
+        "trade_id": "TEST_CN-02_MNPXME3G",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/ok/63a761c1",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "N",
+        "noti_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/noti/63a761c1"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "000730010001",
+        "tid": "2039d27dfc72e6ab9",
+        "pay_url": "https://mup.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d27dfc72e6ab9",
+        "qrcode_url": "https://mup.mobilians.co.kr/MUP/api/qr-code?tid=2039d27dfc72e6ab9",
+        "hmac": "JTbWWmgqnIMr0OkNnFEBDZLsn55jxQ4JZ/sOreYppKA=",
+        "time_stamp": "20260408195530"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  },
+  {
+    "caseId": "CN-01",
+    "caseName": "일시불 + Popup + ok_url만",
+    "runId": "ab945abf",
+    "timestamp": "2026-04-08 22:59:01",
+    "registration": {
+      "tid": "2039d28acc16a53cb",
+      "tradeId": "TEST_CN-01_MNQNGS4W",
+      "payUrl": "https://mup.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d28acc16a53cb",
+      "hmac": "8Dl/GaK+YY9uKphuRDTspOKuLM6xpfrrWJSFjk9sGaE=",
+      "timeStamp": "20260409075901",
+      "reqBody": {
+        "sid": "kgtg",
+        "cash_code": "CN",
+        "product_name": "[TEST] 신용카드 일시불-팝업-okUrl",
+        "trade_id": "TEST_CN-01_MNQNGS4W",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/ok/ab945abf",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "N"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "kgtg",
+        "tid": "2039d28acc16a53cb",
+        "pay_url": "https://mup.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d28acc16a53cb",
+        "qrcode_url": "https://mup.mobilians.co.kr/MUP/api/qr-code?tid=2039d28acc16a53cb",
+        "hmac": "8Dl/GaK+YY9uKphuRDTspOKuLM6xpfrrWJSFjk9sGaE=",
+        "time_stamp": "20260409075901"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  },
+  {
+    "caseId": "MC-01",
+    "caseName": "일반결제 + Popup + ok_url만",
+    "runId": "14b50ade",
+    "timestamp": "2026-04-09 06:39:39",
+    "registration": {
+      "tid": "2039d28beecd51f79",
+      "tradeId": "TEST_MC-01_MNR3X83Y",
+      "payUrl": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d28beecd51f79",
+      "hmac": "fE1rnp2aviKLseJVZVXj8YSDva7bCX731+5GdxG5Iz8=",
+      "timeStamp": "20260409153939",
+      "reqBody": {
+        "sid": "000730010001",
+        "cash_code": "MC",
+        "product_name": "[TEST] 휴대폰 일반-팝업-okUrl",
+        "trade_id": "TEST_MC-01_MNR3X83Y",
+        "site_url": "test.mobilians.co.kr",
+        "ok_url": "https://barwise-lowell-mussily.ngrok-free.dev/callback/ok/14b50ade",
+        "amount": {
+          "total": 1000
+        },
+        "call_type": "P",
+        "hybrid_pay": "N"
+      },
+      "resBody": {
+        "code": "0000",
+        "message": "정상 처리되었습니다.",
+        "sid": "000730010001",
+        "tid": "2039d28beecd51f79",
+        "pay_url": "https://test.mobilians.co.kr/MUP/api/payment.mcash?tid=2039d28beecd51f79",
+        "qrcode_url": "https://test.mobilians.co.kr/MUP/api/qr-code?tid=2039d28beecd51f79",
+        "hmac": "fE1rnp2aviKLseJVZVXj8YSDva7bCX731+5GdxG5Iz8=",
+        "time_stamp": "20260409153939"
+      },
+      "success": true
+    },
+    "verdict": "pending",
+    "verdictReason": "거래등록 성공. 결제 진행 대기 중."
+  }
+]

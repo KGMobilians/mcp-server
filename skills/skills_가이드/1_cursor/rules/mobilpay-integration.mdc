@@ -1,0 +1,82 @@
+---
+description: MOBILPAY(KG파이낸셜) REST API 결제 연동 코드 작성 시 적용
+globs:
+alwaysApply: false
+---
+
+# MOBILPAY 결제 연동 규칙
+
+MOBILPAY, KG파이낸셜, 모빌페이, KG파이낸셜, mobilians, 결제 연동, 거래등록, 결제승인, 결제취소, 환불, HMAC, noti_url 등을 언급하면 이 규칙을 적용합니다.
+
+## 결제 플로우
+
+### 일반결제 (hybrid_pay=N, 기본값)
+거래등록 → 결제창 호출 → 사용자 결제 → ok_url로 승인결과 수신 → 검증 → 서비스 제공
+
+### 하이브리드결제 (hybrid_pay=Y)
+거래등록 → 결제창 호출 → 사용자 인증 → ok_url로 인증결과 수신 → 가맹점이 승인 API 호출 → 승인결과 수신 → 서비스 제공
+
+## 핵심 API 엔드포인트
+
+| 단계 | Method | Path |
+|------|--------|------|
+| 거래등록 | POST | `/MUP/api/registration` |
+| 결제승인 (TID) | POST | `/MUP/api/approval` |
+| 결제승인 (MOBILID) | POST | `/MUP/api/approval` |
+| 수동매입 | POST | `/MUP/api/purchase` |
+| 결제취소 | POST | `/MUP/api/cancel` (cancel_type=C) |
+| 환불 | POST | `/MUP/api/cancel` (cancel_type=R) |
+| 가상계좌 채번취소 | POST | `/MUP/api/account-expire` |
+| 현금영수증 | POST | `/MUP/api/cash-receipt` |
+
+- 테스트: `https://test.mobilians.co.kr`
+- 운영: `https://mup.mobilians.co.kr`
+- 공통: Content-Type `application/json`, HTTPS(443), POST, 성공코드 `0000`
+
+## 보안 규칙 (반드시 준수)
+
+### 1. skey(서비스 키) 보호
+절대 클라이언트 코드에 하드코딩 금지. 환경변수(`process.env.MOBILPAY_SKEY`)에서 로드.
+
+### 2. HMAC 무결성 검증은 서버사이드 전용
+HMAC 메시지: `amount(total)` + `ok_url` + `trade_id` + `time_stamp`
+
+### 3. noti_url 핸들러에 멱등성 로직 필수
+noti_url은 SUCCESS 수신까지 최대 20회 반복 호출. `tid` 기반 중복 방어 필수.
+
+### 4. 결제승인 API는 백엔드에서만 호출
+`/MUP/api/approval`은 반드시 서버 사이드에서만.
+
+### 5. SUCCESS/FAIL 출력 규칙
+noti_url 응답은 HTML 없이 `SUCCESS` 또는 `FAIL` 문자열만 출력.
+
+## 결제수단 코드
+
+| 결제수단 | cash_code | 주요 옵션 |
+|----------|-----------|----------|
+| 휴대폰 | `MC` | `pay_options.mc_*` |
+| 신용카드 | `CN` | `pay_options.cn_*` |
+| 실계좌이체 | `RA` | `pay_options.ra_*` |
+| 가상계좌 | `VA` | `pay_options.va_*` |
+| 간편결제 | `CN` (ep_code로 구분) | `pay_options.ep_*` |
+
+간편결제: `KKO`(카카오페이), `TOS`(토스), `NAV`(네이버페이), `SSP`(삼성페이), `PYC`(페이코), `LTP`(엘페이), `SSG`(SSG페이), `APP`(애플페이)
+
+## 코드 생성 체크리스트
+
+- [ ] skey가 환경변수에서 로드되는지
+- [ ] HMAC 검증이 서버사이드에서만 수행되는지
+- [ ] noti_url 핸들러에 중복 거래 방어 로직이 있는지
+- [ ] 결제승인 API 호출이 백엔드에서만 이루어지는지
+- [ ] 금액 검증 로직이 포함되어 있는지
+- [ ] code=0000 성공 여부 확인 로직이 있는지
+- [ ] noti_url 응답이 SUCCESS/FAIL 문자열만 출력하는지
+- [ ] 테스트/운영 호스트가 올바르게 분기되는지
+
+## MCP 서버 활용
+
+상세 API 명세가 필요하면 MCP Tool을 사용하세요:
+- `get-docs` — 키워드 검색
+- `get-payment-api-spec` — API 전체 명세 조회
+- `get-payment-code-example` — 언어별 코드 예제
+- `document-by-id` — 문서 ID로 조회 (id=0: 목록)
