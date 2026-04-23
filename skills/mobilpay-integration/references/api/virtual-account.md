@@ -47,7 +47,7 @@
 
 ```json
 {
-  "sid": "000730010001",
+  "sid": "YOUR_SID",
   "trade_id": "ORDER_20250704_006",
   "pay_token": "1904258548577654668",
   "amount": "50000"
@@ -85,7 +85,6 @@
 | `Mobilid` | string | 모빌 거래번호 (`pay_token`과 동일한 값) |
 | `Tradeid` | string | 가맹점 거래번호 |
 | `Svcid` | string | 가맹점 코드 |
-| `Mrchid` | string | 가맹점 ID |
 
 ### noti_url 필수 확인 항목
 

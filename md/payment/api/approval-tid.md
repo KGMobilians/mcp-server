@@ -16,7 +16,7 @@
 |------|------|----------|------|------|
 | `sid` | string | 12 | Y | 가맹점 코드 |
 | `tid` | string | 20 | Y | 거래등록 고유번호. 거래 등록 API 응답으로 받은 값 |
-| `cash_code` | string | 2 | Y | 결제수단. `MC`: 휴대폰, `CN`: 신용카드, `RA`: 실계좌이체, `VA`: 가상계좌 |
+| `cash_code` | string | 2 | Y | 결제수단. `MC`: 휴대폰, `CN`: 신용카드, `RA`: 실계좌이체, `VA`: 가상계좌, `EP`: 간편결제, `TM`: 모바일티머니 |
 | `pay_token` | string | 50 | Y | 결제 토큰. ok_url 인증 응답에서 받은 값 |
 | `amount` | string | 10 | Y | 총 결제 금액 |
 
@@ -49,19 +49,15 @@
 
 **휴대폰 (MC)**: `mc_bill_key`(자동결제 키), `mc_user_key`(휴대폰정보 대체 키), `mc_simple_key`(간소화결제 키)
 
-**신용카드 (CN)**: `cn_installment`(할부개월), `cn_card_no`(카드번호), `cn_card_code`(카드코드), `cn_card_name`(카드이름), `cn_appr_no`(승인번호), `cn_coupon_price`(쿠폰 사용 금액), `cn_pay_method`(지불 방법), `cn_own_cd`(카드소유구분), `cn_bill_yn`(현금영수증 발급여부)
+**신용카드 (CN)**: `cn_installment`(할부개월), `cn_card_no`(카드번호), `cn_card_code`(카드코드), `cn_card_name`(카드이름), `cn_appr_no`(승인번호), `cn_bill_key`(자동결제 키)
 
-**간편결제**: `ep_installment`, `ep_card_no`, `ep_card_code`, `ep_card_name`, `ep_appr_no`, `ep_coupon_price`, `ep_pay_method`, `ep_bill_yn`
-
-**실계좌이체 (RA)**: `ra_bank_name`(은행명)
-
-**가상계좌 (VA)**: `va_account_no`(가상 계좌번호), `va_bank_code`(은행코드), `va_rcptlimit_date`(입금 마감 일자), `va_acctlimit_date`(계좌 만기 일자)
+**간편결제 (EP)**: `ep_installment`, `ep_card_no`, `ep_card_code`, `ep_card_name`, `ep_appr_no`
 
 ## 요청 예제
 
 ```json
 {
-  "sid": "000730010001",
+  "sid": "YOUR_SID",
   "tid": "20190619160850826790",
   "cash_code": "MC",
   "pay_token": "1904258548577654668",
@@ -75,7 +71,7 @@
 {
   "code": "0000",
   "message": "정상처리",
-  "sid": "000730010001",
+  "sid": "YOUR_SID",
   "tid": "20190619160850826790",
   "cash_code": "MC",
   "pay_token": "1904258548577654668",

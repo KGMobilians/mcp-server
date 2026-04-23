@@ -19,13 +19,13 @@
 | 단계 | Method | Path |
 |------|--------|------|
 | 거래등록 | POST | `/MUP/api/registration` |
-| 결제승인 (TID) | POST | `/MUP/api/approval` |
-| 결제승인 (MOBILID) | POST | `/MUP/api/approval` |
+| 결제승인 | POST | `/MUP/api/approval` |
 | 수동매입 | POST | `/MUP/api/purchase` |
-| 결제취소 | POST | `/MUP/api/cancel` (cancel_type=C) |
-| 환불 | POST | `/MUP/api/cancel` (cancel_type=R) |
+| 결제취소 | POST | `/MUP/api/cancellation` (cancel_type=C) |
+| 환불 | POST | `/MUP/api/cancellation` (cancel_type=R) |
 | 가상계좌 채번취소 | POST | `/MUP/api/account-expire` |
 | 현금영수증 | POST | `/MUP/api/cash-receipt` |
+| 에스크로 배송등록 | POST | `/MUP/api/escrow/delivery` |
 
 - 테스트: `https://test.mobilians.co.kr`
 - 운영: `https://mup.mobilians.co.kr`
@@ -34,7 +34,7 @@
 ### 보안 규칙 (반드시 준수)
 
 1. **skey(서비스 키) 보호**: 절대 클라이언트 코드에 하드코딩 금지. 환경변수(`process.env.MOBILPAY_SKEY`)에서 로드.
-2. **HMAC 무결성 검증은 서버사이드 전용**: HMAC 메시지 = `amount(total)` + `ok_url` + `trade_id` + `time_stamp`
+2. **HMAC 무결성 검증은 서버사이드 전용**: 엔드포인트별 메시지 상이 — 거래등록/승인 = `amount(total)+ok_url+trade_id+time_stamp`, 취소/환불(`/cancellation`) = `sid+trade_id+pay_token+amount`, 에스크로(`/escrow/delivery`) = `sid+pay_token+amount+sign_date`
 3. **noti_url 핸들러에 멱등성 로직 필수**: SUCCESS 수신까지 최대 20회 반복 호출. `tid` 기반 중복 방어 필수.
 4. **결제승인 API는 백엔드에서만 호출**: `/MUP/api/approval`은 반드시 서버 사이드에서만.
 5. **SUCCESS/FAIL 출력 규칙**: noti_url 응답은 HTML 없이 `SUCCESS` 또는 `FAIL` 문자열만 출력.
@@ -47,7 +47,8 @@
 | 신용카드 | `CN` | `pay_options.cn_*` |
 | 실계좌이체 | `RA` | `pay_options.ra_*` |
 | 가상계좌 | `VA` | `pay_options.va_*` |
-| 간편결제 | `CN` (ep_code로 구분) | `pay_options.ep_*` |
+| 간편결제 | `EP` (`ep_code`로 구분) | `pay_options.ep_*` |
+| 교통카드(모바일티머니) | `TM` (`hybrid_pay=Y` 필수) | `pay_options.tm_*` |
 
 간편결제: `KKO`(카카오페이), `TOS`(토스), `NAV`(네이버페이), `SSP`(삼성페이), `PYC`(페이코), `LTP`(엘페이), `SSG`(SSG페이), `APP`(애플페이)
 

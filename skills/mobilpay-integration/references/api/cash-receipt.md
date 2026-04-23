@@ -33,7 +33,7 @@
 | `user_name` | string | 30 | N | 사용자 이름 |
 | `user_phone_no` | string | 20 | N | 사용자 연락처 |
 | `user_email` | string | 50 | N | 사용자 이메일 |
-| `prdt_name` | string | 255 | N | 상품명 |
+| `product_name` | string | 255 | N | 상품명 |
 | `business_no` | string | 10 | N | 사업자번호 |
 | `tax` | string | 12 | N | 부가세 |
 
@@ -55,7 +55,7 @@
 ```json
 {
   "mode": "45",
-  "sid": "000730010001",
+  "sid": "YOUR_SID",
   "cash_code": "RA",
   "site_url": "www.example.com",
   "amount": "10000",
@@ -68,7 +68,7 @@
   "user_name": "홍길동",
   "user_phone_no": "01012345678",
   "user_email": "user@example.com",
-  "prdt_name": "테스트상품"
+  "product_name": "테스트상품"
 }
 ```
 

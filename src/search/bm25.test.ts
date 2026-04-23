@@ -83,7 +83,7 @@ describe("BM25Index", () => {
     const index = new BM25Index();
     index.build([
       makeChunk("p1", "payment/api/registration.md", "거래등록 API sid cash_code 결제창 호출을 위한 거래정보 등록"),
-      makeChunk("p2", "payment/api/cancel.md", "결제취소 API cancel_type 전체취소 부분취소 처리"),
+      makeChunk("p2", "payment/api/cancellation.md", "결제취소 API cancel_type 전체취소 부분취소 처리"),
       makeChunk("n1", "nezo/api/send.md", "알림톡 결제요청 API svc_id recv_hp 카카오 알림톡 결제 요청"),
       makeChunk("n2", "nezo/api/cancel.md", "내죠여왕 결제취소 API svc_id pay_no trade_no 취소"),
     ]);

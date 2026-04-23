@@ -31,7 +31,7 @@
 
 ```json
 {
-  "sid": "000730010001",
+  "sid": "YOUR_SID",
   "trade_id": "ORDER_20250704_001",
   "cash_code": "CN",
   "pay_token": "1904258548577654668"

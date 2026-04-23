@@ -11,8 +11,8 @@ const TOOL_DESCRIPTION = `MOBILPAY REST API의 전체 명세를 조회합니다.
 
 사용 가능한 api_name:
 registration(거래등록), payment-window(결제창), auth-response(인증응답),
-approval-tid(결제승인TID), approval-mobilid(결제승인MOBILID), purchase(수동매입),
-virtual-account(가상계좌), cancel(결제취소), refund(환불),
+approval-tid(결제승인), purchase(수동매입), virtual-account(가상계좌),
+cancellation(결제취소), refund(환불), escrow-delivery(에스크로 배송등록),
 cash-receipt(현금영수증), hmac(HMAC검증)
 
 보안 규칙:
@@ -21,7 +21,7 @@ cash-receipt(현금영수증), hmac(HMAC검증)
 3. 결제 승인 API(/MUP/api/approval)는 반드시 백엔드에서 호출.`;
 
 const InputSchema = {
-  api_name: z.string().describe("API 이름. 예: 'registration', '거래등록', 'cancel', '결제취소'"),
+  api_name: z.string().describe("API 이름. 예: 'registration', '거래등록', 'cancellation', '결제취소', 'escrow-delivery'"),
 };
 
 export function registerGetPaymentApiSpecTool(server: McpServer): void {

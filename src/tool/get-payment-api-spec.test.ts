@@ -16,9 +16,19 @@ describe("get-payment-api-spec", () => {
     expect(text).toContain("payment/api/registration.md");
   });
 
-  it("'cancel' — 결제취소 문서", async () => {
+  it("'cancel' — 결제취소 문서 (cancellation.md 로 해석)", async () => {
     const text = await callTool("get-payment-api-spec", { api_name: "cancel" });
-    expect(text).toContain("payment/api/cancel.md");
+    expect(text).toContain("payment/api/cancellation.md");
+  });
+
+  it("'cancellation' — 결제취소 문서", async () => {
+    const text = await callTool("get-payment-api-spec", { api_name: "cancellation" });
+    expect(text).toContain("payment/api/cancellation.md");
+  });
+
+  it("'escrow-delivery' — 에스크로 배송등록 문서", async () => {
+    const text = await callTool("get-payment-api-spec", { api_name: "escrow-delivery" });
+    expect(text).toContain("payment/api/escrow-delivery.md");
   });
 
   it("'hmac' — HMAC 검증 문서", async () => {

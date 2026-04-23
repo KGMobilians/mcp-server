@@ -73,7 +73,7 @@ fetch('https://mup.mobilians.co.kr/MUP/api/registration', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    sid: '000730010001',
+    sid: 'YOUR_SID',
     cash_code: 'CN',
     product_name: '테스트상품',
     trade_id: 'ORDER_20250704_001',

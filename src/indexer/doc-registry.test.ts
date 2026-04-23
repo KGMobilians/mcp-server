@@ -20,6 +20,12 @@ beforeAll(async () => {
 describe("buildRegistry / listDocuments", () => {
   it("27개 문서가 등록됨", () => {
     const docs = listDocuments();
+    // MOBILPAY 18: registration, payment-window, auth-response, approval-tid,
+    // purchase, virtual-account, cancellation, refund, escrow-delivery,
+    // cash-receipt, hmac, flow-normal, flow-hybrid, noti-url, firewall,
+    // integration-guide, error-codes, payment-codes (18)
+    // NEZO 9: send, callback, search, cancel, resend, start, firewall,
+    // response-codes, mac-guide (9)
     expect(docs.length).toBe(27);
   });
 
@@ -41,14 +47,18 @@ describe("buildRegistry / listDocuments", () => {
 describe("resolvePaymentApiName", () => {
   it("영문 정확 매치", () => {
     expect(resolvePaymentApiName("registration")).toBe("payment/api/registration.md");
-    expect(resolvePaymentApiName("cancel")).toBe("payment/api/cancel.md");
+    expect(resolvePaymentApiName("cancellation")).toBe("payment/api/cancellation.md");
+    expect(resolvePaymentApiName("cancel")).toBe("payment/api/cancellation.md");
     expect(resolvePaymentApiName("hmac")).toBe("payment/api/hmac.md");
+    expect(resolvePaymentApiName("escrow-delivery")).toBe("payment/api/escrow-delivery.md");
   });
 
   it("한글 정확 매치", () => {
     expect(resolvePaymentApiName("거래등록")).toBe("payment/api/registration.md");
-    expect(resolvePaymentApiName("결제취소")).toBe("payment/api/cancel.md");
+    expect(resolvePaymentApiName("결제취소")).toBe("payment/api/cancellation.md");
     expect(resolvePaymentApiName("현금영수증")).toBe("payment/api/cash-receipt.md");
+    expect(resolvePaymentApiName("에스크로")).toBe("payment/api/escrow-delivery.md");
+    expect(resolvePaymentApiName("모바일티머니")).toBe("payment/api/registration.md");
   });
 
   it("대소문자 무시", () => {
@@ -118,11 +128,13 @@ describe("맵 키 → 파일 존재 검증", () => {
   it("PAYMENT_API_NAME_MAP의 모든 경로가 실제 파일을 가리킴", () => {
     const paymentNames = [
       "registration", "거래등록", "payment-window", "결제창",
-      "auth-response", "approval-tid", "approval-mobilid",
-      "purchase", "virtual-account", "cancel", "결제취소",
-      "refund", "환불", "cash-receipt", "현금영수증", "hmac",
+      "auth-response", "approval-tid",
+      "purchase", "virtual-account", "cancellation", "결제취소",
+      "refund", "환불", "escrow-delivery", "에스크로",
+      "cash-receipt", "현금영수증", "hmac",
       "flow-normal", "flow-hybrid", "noti-url", "firewall",
-      "integration-guide", "error-codes", "payment-codes",
+      "integration-guide", "티머니페이",
+      "error-codes", "payment-codes",
     ];
     for (const name of paymentNames) {
       const path = resolvePaymentApiName(name);

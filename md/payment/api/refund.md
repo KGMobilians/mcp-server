@@ -1,13 +1,14 @@
 # 환불
 
-환불은 계좌이체 결제 건에 대해 구매자의 계좌로 환불 금액을 이체하는 API입니다. 결제 취소와 동일한 엔드포인트(`/MUP/api/cancel`)를 사용하되, `cancel_type`을 `R`로 설정하고 환불 계좌 정보를 추가로 전달합니다.
+환불은 계좌이체 결제 건에 대해 구매자의 계좌로 환불 금액을 이체하는 API입니다. 결제 취소와 동일한 엔드포인트(`/MUP/api/cancellation`)를 사용하되, `cancel_type`을 `R`로 설정하고 환불 계좌 정보를 추가로 전달합니다.
 
 - **HTTP Method**: POST
 - **Content-Type**: application/json
-- **PATH**: `/MUP/api/cancel`
-- **운영서버**: `https://mup.mobilians.co.kr/MUP/api/cancel`
+- **PATH**: `/MUP/api/cancellation`
+- **운영서버**: `https://mup.mobilians.co.kr/MUP/api/cancellation`
+- **테스트서버**: `https://test.mobilians.co.kr/MUP/api/cancellation`
 
-> **주의**: 환불은 결제 취소와 동일한 PATH를 사용합니다. `cancel_type` 값으로 구분됩니다. 취소: `cancel_type=C`, 환불: `cancel_type=R`
+> **주의**: 환불은 결제 취소와 동일한 PATH(`/cancellation`)를 사용합니다. `cancel_type` 값으로 구분됩니다. 취소: `cancel_type=C`, 환불: `cancel_type=R`. 구 버전 `/MUP/api/cancel` 엔드포인트는 사용하지 마세요.
 
 ## 요청 파라미터
 
@@ -24,6 +25,7 @@
 | `account_no` | string | 20 | Y | 환불받을 계좌 번호 |
 | `account_name` | string | 50 | Y | 예금주 명 |
 | `refund_amount` | string | 10 | Y | 환불 금액 |
+| `hmac` | string | 44 | Y | 무결성 검증용 hash. 메시지 = `sid` + `trade_id` + `pay_token` + `amount`. 취소/환불 동일 방식 |
 
 ## 응답 파라미터
 
@@ -41,7 +43,7 @@
 
 ```json
 {
-  "sid": "000730010001",
+  "sid": "YOUR_SID",
   "trade_id": "ORDER_20250704_001",
   "cash_code": "MC",
   "pay_token": "1904258548577654668",
@@ -61,7 +63,7 @@
 {
   "code": "0000",
   "message": "정상처리",
-  "sid": "000730010001",
+  "sid": "YOUR_SID",
   "cash_code": "MC",
   "pay_token": "1904258548577654668",
   "amount": "1000",

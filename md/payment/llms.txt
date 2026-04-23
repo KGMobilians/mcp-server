@@ -5,12 +5,12 @@
 - [거래 등록 API](/payment/api/registration.md): 결제 창 호출을 위한 거래정보 등록. POST /MUP/payment/api/registration
 - [결제 창 호출](/payment/api/payment-window.md): 거래등록 응답의 pay_url을 팝업/iframe/QRCode로 호출
 - [결제 인증/승인 응답](/payment/api/auth-response.md): 결제창 이후 ok_url/fail_url/noti_url로 전달되는 결과 처리
-- [결제 승인 - TID 방식](/payment/api/approval-tid.md): TID 기반 하이브리드 결제 승인. POST /MUP/payment/api/approval
-- [결제 승인 - MOBILID 방식](/payment/api/approval-mobilid.md): MOBILID 기반 결제 승인 (TID 미사용 가맹점). POST /MUP/payment/api/approval
+- [결제 승인](/payment/api/approval-tid.md): TID 기반 하이브리드 결제 승인. POST /MUP/payment/api/approval
 - [수동 매입](/payment/api/purchase.md): 신용카드/간편결제 수동 매입. POST /MUP/payment/api/purchase
 - [가상계좌](/payment/api/virtual-account.md): 가상계좌 채번취소, 입금 후 noti_url 처리. POST /MUP/payment/api/account-expire
-- [결제 취소](/payment/api/cancel.md): 전체취소/부분취소 처리. POST /MUP/payment/api/cancel (cancel_type=C)
-- [환불](/payment/api/refund.md): 계좌이체 환불 처리. POST /MUP/payment/api/cancel (cancel_type=R)
+- [결제 취소](/payment/api/cancellation.md): 전체취소/부분취소 처리. POST /MUP/payment/api/cancellation (cancel_type=C)
+- [환불](/payment/api/refund.md): 계좌이체 환불 처리. POST /MUP/payment/api/cancellation (cancel_type=R)
+- [에스크로 배송등록](/payment/api/escrow-delivery.md): 실계좌이체/가상계좌 배송정보 등록. POST /MUP/payment/api/escrow/delivery
 - [현금영수증](/payment/api/cash-receipt.md): 발급/취소/단독취소. POST /MUP/payment/api/cash-receipt
 - [HMAC 무결성 검증](/payment/api/hmac.md): skey 기반 HMAC-SHA256 메시지 무결성 검증. Java/.NET/Node.js/Python/PHP 예제 포함
 - [결제 플로우 - 일반결제](/payment/guides/flow-normal.md): 인증+승인 일체형 결제 순서도
